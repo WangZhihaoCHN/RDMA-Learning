@@ -136,7 +136,7 @@ int main(int argc, char *argv[])
 	}else{
 		glex_ep_addr_t source_ep_addr;
 		uint32_t mpLen;
-		printf("接收节点：接收前，buffer内容是：%s\n", mem_addr);
+		printf("\n接收节点：接收前，buffer内容是：%s\n", mem_addr);
 		ret = glex_receive_mp(ep, 30, &source_ep_addr, mem_addr, &mpLen);
 		TEST_RetSuccess(ret, "阻塞接收MP报文失败！");
 		printf("接收节点：接收后，buffer内容是，%s\n", mem_addr);
