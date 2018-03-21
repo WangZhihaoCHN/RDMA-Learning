@@ -96,13 +96,16 @@ int main(int argc, char *argv[])
 	ret = glex_register_mem(ep, mem_addr, sizeof(char)*10, GLEX_MEM_READ|GLEX_MEM_WRITE, &mh);
 
 	/* 定义本地端点地址和远程端点地址的char数组，便于MPI发送 */
+	/*
 	char msg[sizeof "0000:0000:00000000:0000000000000000"];
 	char remoteMsg[sizeof "0000:0000:00000000:0000000000000000"];
 	int parsed;		// 用于验证接收后参数数量是否正确
 	sprintf(msg, "%04x:%04x:%08x:%016Lx", 
 				ep_addr.s.ep_num, ep_addr.s.resv, ep_addr.s.nic_id, ep_addr.v);
+	*/
 
 	/* 利用MPI，交换发送、接收端点的地址(glex_ep_addr_t) */
+	/*
 	if(my_id == 0){		//发送进程
 		MPI_Isend(msg, strlen(msg), MPI_CHAR, 1, 0, MPI_COMM_WORLD, &handle);
 		MPI_Recv(remoteMsg, strlen(msg), MPI_CHAR, 1, 0, MPI_COMM_WORLD, &status);
@@ -110,9 +113,11 @@ int main(int argc, char *argv[])
 		MPI_Isend(msg, strlen(msg), MPI_CHAR, 0, 0, MPI_COMM_WORLD, &handle);
 		MPI_Recv(remoteMsg, strlen(msg), MPI_CHAR, 0, 0, MPI_COMM_WORLD, &status);
 	}
+	*/
 
 	/* 将接收的数据存储于remote_ep_addr中 */
 	// 远程端点地址
+	/*
 	glex_ep_addr_t remote_ep_addr;
 	parsed = sscanf(remoteMsg, "%x:%x:%x:%Lx", 
 					&(remote_ep_addr.s.ep_num), &(remote_ep_addr.s.resv), &(remote_ep_addr.s.nic_id), &(remote_ep_addr.v));
@@ -121,8 +126,10 @@ int main(int argc, char *argv[])
 		fprintf(stderr, "发送和接收端点交换信息失败");
 
 	printf("本地端点NIC ID：%d, 端点序号: %d, 远程端点NIC ID：%d\n", nicID, EPNum, remote_ep_addr.s.nic_id);
-
+	*/
+	
 	/* 利用GLEX，以非阻塞的方式，提交一个MP报文的发送 */
+	/*
 	if(my_id == 0){
 		strcpy(mem_addr, "Hello!\n");
 		struct glex_imm_mp_req mpReq = {
@@ -141,7 +148,20 @@ int main(int argc, char *argv[])
 		TEST_RetSuccess(ret, "阻塞接收MP报文失败！");
 		printf("接收节点：接收后，buffer内容是，%s\n", mem_addr);
 	}
+	*/
 
+	/* 利用GLEX，在本地端点与远程端点之间，进行RDMA通信操作 */
+	if(my_id == 0){
+		strcpy(mem_addr, "Hello!\n");
+		struct glex_rdma_req rdmaReq = {
+			.rmt_ep_addr = remote_ep_addr,
+			.local_offset = 0,
+			.len = 7,
+			.rmt_mh = 
+		};
+	}else{
+
+	}
 
 
 	/* 其他工作… */
