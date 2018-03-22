@@ -122,7 +122,6 @@ int main(int argc, char *argv[])
 	// 验证接收过程和存储过程是否正常
 	if(parsed != 4)
 		fprintf(stderr, "发送和接收端点交换信息失败");
-
 	printf("本地端点NIC ID：%d, 端点序号: %d, 远程端点NIC ID：%d\n", nicID, EPNum, remote_ep_addr.s.nic_id);
 
 	/****
@@ -151,12 +150,14 @@ int main(int argc, char *argv[])
 		fprintf(stderr, "发送和接收端点交换信息失败");
 		return -1;
 	}
+	printf("本地端点mmt_index：%d, 远程端点mmt_index：%d\n", mh.s.mmt_index, remote_mem_addr.s.mmt_index);
 
 	/* 利用GLEX，在本地端点与远程端点之间，进行RDMA通信操作 */
 	if(my_id == 0){
 		strcpy(mem_addr, "Hello!\n");
 		struct glex_rdma_req rdmaReq = {
 			.rmt_ep_addr = remote_ep_addr,
+			.local_mh = mh,
 			.local_offset = 0,
 			.len = 7,
 			.rmt_mh = remote_mem_addr,
@@ -172,6 +173,11 @@ int main(int argc, char *argv[])
 		};
 		ret = glex_rdma(ep, &rdmaReq, NULL);
 		TEST_RetSuccess(ret, "非阻塞RDMA写失败！");
+		// 轮询检查RDMA操作是否出现错误请求
+		uint32_t num_er;
+		struct glex_err_req er_list[2];
+		ret = glex_poll_error_req(ep, &num_er, er_list);
+		printf("num_er: %d\n", num_er);
 	}else{
 		while(1){
 			printf("接收节点：接收后，buffer内容是，%s\n", mem_addr);
