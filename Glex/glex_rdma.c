@@ -155,6 +155,13 @@ int main(int argc, char *argv[])
 	/* 利用GLEX，在本地端点与远程端点之间，进行RDMA通信操作 */
 	if(my_id == 0){
 		strcpy(mem_addr, "Hello!\n");
+
+		// 触发的远程事件，便于被写节点知道RDMA写已完成
+		struct glex_event remote_event = {
+			.cookie_0 = 0,
+			.cookie_1 = 1
+		};
+
 		struct glex_rdma_req rdmaReq = {
 			.rmt_ep_addr = remote_ep_addr,
 			.local_mh = mh,
@@ -164,25 +171,28 @@ int main(int argc, char *argv[])
 			.rmt_offset = 0,
 			.type = GLEX_RDMA_TYPE_PUT,
 //			.local_evt = ,
-//			.rmt_evt = ,
+			.rmt_evt = remote_event,
 			.rmt_key = 13,			// ep_attr初始化时设置的
 //			.coll_counter = ,
 //			.coll_set_num = ,
 //			.flag = ,
 			.next = NULL
 		};
+
+		// 发送RDMA PUT通信请求
 		ret = glex_rdma(ep, &rdmaReq, NULL);
 		TEST_RetSuccess(ret, "非阻塞RDMA写失败！");
+
 		// 轮询检查RDMA操作是否出现错误请求
 		uint32_t num_er;
-		struct glex_err_req er_list[2];
+		struct glex_err_req *er_list;
 		ret = glex_poll_error_req(ep, &num_er, er_list);
-		printf("num_er: %d\n", num_er);
+		if(num_er != 0)
+			printf("%s\n", "glex_rdma操作失败，num_er不为0。");
 	}else{
-		while(1){
-			printf("接收节点：接收后，buffer内容是，%s\n", mem_addr);
-			sleep(10);
-		}
+		glex_event_t *event = (glex_event_t *)malloc(10*sizeof(glex_event_t));
+		ret = glex_probe_first_event(ep, -1, &event);
+		printf("接收节点：接收后，buffer内容是，%s\n", mem_addr);
 	}
 
 
