@@ -158,8 +158,8 @@ int main(int argc, char *argv[])
 
 		// 触发的远程事件，便于被写节点知道RDMA写已完成
 		struct glex_event remote_event = {
-			.cookie_0 = 0,
-			.cookie_1 = 1
+			.cookie_0 = 10,
+			.cookie_1 = 11
 		};
 
 		struct glex_rdma_req rdmaReq = {
@@ -175,7 +175,7 @@ int main(int argc, char *argv[])
 			.rmt_key = 13,			// ep_attr初始化时设置的
 //			.coll_counter = ,
 //			.coll_set_num = ,
-//			.flag = ,
+			.flag = GLEX_FLAG_REMOTE_EVT,
 			.next = NULL
 		};
 
@@ -192,12 +192,24 @@ int main(int argc, char *argv[])
 	}else{
 		glex_event_t *event = (glex_event_t *)malloc(10*sizeof(glex_event_t));
 		ret = glex_probe_first_event(ep, -1, &event);
+		TEST_RetSuccess(ret, "被写端点未接收到触发事件！");
+		// 轮询检查RDMA操作是否出现错误请求
+		uint32_t num_er;
+		struct glex_err_req *er_list;
+		ret = glex_poll_error_req(ep, &num_er, er_list);
+		if(num_er != 0)
+			printf("%s\n", "glex_rdma操作失败，num_er不为0。");
+		printf("cookie_0:%d, cookie_1:%d\n", event[0].cookie_0, event[0].cookie_1);
+		TEST_RetSuccess(ret, "被写端点未接收到触发事件！");
 		printf("接收节点：接收后，buffer内容是，%s\n", mem_addr);
 	}
 
 
 	/* 其他工作… */
 
+
+
+	MPI_Finalize();
 
 	/* 释放内存 */
 	ret = glex_deregister_mem(ep, mh);
