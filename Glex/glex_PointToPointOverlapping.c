@@ -10,7 +10,7 @@
 #include "mpi.h"
 
 // 内存区域大小为 SIZE*SIZE的缓冲区
-#define SIZE 20000
+#define SIZE 200
 
 static int die(const char *reason){
 	fprintf(stderr, "Err: %s - %s\n ", strerror(errno), reason);
@@ -106,6 +106,7 @@ int main(int argc, char *argv[])
 
 	/* 注册内存，锁内存并建立映射关系 */
 	char mem_addr[SIZE][SIZE];
+	memset(mem_addr, 0, SIZE*SIZE);
 	glex_mem_handle_t mh;
 	ret = glex_register_mem(ep, mem_addr, sizeof(char)*SIZE*SIZE, GLEX_MEM_READ|GLEX_MEM_WRITE, &mh);
 
@@ -168,7 +169,8 @@ int main(int argc, char *argv[])
 
 	/* 利用GLEX，在本地端点与远程端点之间，进行RDMA通信操作 */
 	if(my_id == 0){
-		strcpy(mem_addr, "Hello!\n");
+		//strcpy(mem_addr, "Hello!\n");
+		memset(mem_addr, 49, SIZE*SIZE);
 
 		// 触发的远程事件，便于被写节点知道RDMA写已完成
 		struct glex_event remote_event = {
@@ -184,7 +186,7 @@ int main(int argc, char *argv[])
 			.rmt_mh = remote_mem_addr,
 			.rmt_offset = 0,
 			.type = GLEX_RDMA_TYPE_PUT,
-//			.local_evt = ,
+			.local_evt = remote_event,
 			.rmt_evt = remote_event,
 			.rmt_key = 13,			// ep_attr初始化时设置的
 //			.coll_counter = ,
@@ -197,18 +199,53 @@ int main(int argc, char *argv[])
 		ret = glex_rdma(ep, &rdmaReq, NULL);
 		TEST_RetSuccess(ret, "非阻塞RDMA写失败！");
 
+		// 开始发送，计时 
+		startTime = MPI_Wtime();
+
+		printf("发送进程: 占用CPU %.4lf 秒\n", SEC);
+		//占用CPU一段时间（1s）
+		clock_t st, rt;				//占用cpu开始时间，占用cpu当前执行时间
+		st = clock();
+		double cps = (double)(SEC * CLOCKS_PER_SEC);  //需要占用SEC秒数
+		while(1){
+			rt = clock();
+			if( (double)(rt-st) >= cps)
+				break;
+		}
+		cpuTime = MPI_Wtime();
+
+		glex_event_t *event = (glex_event_t *)malloc(10*sizeof(glex_event_t));
+		ret = glex_probe_first_event(ep, -1, &event);
+		TEST_RetSuccess(ret, "写端点未接收到触发事件！");
+
+		// 记录结束时间
+		waitTime = MPI_Wtime();
+		printf("Sender: Sending task finished : %lf seconds \n", waitTime);
+		totalTime = waitTime - startTime;
+		printf("发送进程: 已经完成，用时 %.4lf 秒\n", totalTime);
+
+		printf("cookie_0:%d, cookie_1:%d\n", event[0].cookie_0, event[0].cookie_1);
+
 		// 轮询检查RDMA操作是否出现错误请求
-		uint32_t num_er;
+/*		uint32_t num_er;
 		struct glex_err_req *er_list;
 		ret = glex_poll_error_req(ep, &num_er, er_list);
 		if(num_er != 0)
 			printf("%s\n", "glex_rdma操作失败，num_er不为0。");
+*/
 	}else{
 		glex_event_t *event = (glex_event_t *)malloc(10*sizeof(glex_event_t));
 		ret = glex_probe_first_event(ep, -1, &event);
 		TEST_RetSuccess(ret, "被写端点未接收到触发事件！");
+
+		// 记录结束时间
+		waitTime = MPI_Wtime();
+		printf("Receiver: Sending task finished : %lf seconds \n", waitTime);
+
 		printf("cookie_0:%d, cookie_1:%d\n", event[0].cookie_0, event[0].cookie_1);
 		printf("接收节点：接收后，buffer内容是，%s\n", mem_addr);
+		waitTime = MPI_Wtime();
+		printf("Receiver: Sending task finished : %lf seconds \n", waitTime);
 	}
 
 
