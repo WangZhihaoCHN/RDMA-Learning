@@ -4,9 +4,13 @@
 #include <unistd.h>
 #include <errno.h>
 #include <netdb.h>
+#include <time.h>
 
 #include "glex.h"
 #include "mpi.h"
+
+// 内存区域大小为 SIZE*SIZE的缓冲区
+#define SIZE 20000
 
 static int die(const char *reason){
 	fprintf(stderr, "Err: %s - %s\n ", strerror(errno), reason);
@@ -28,6 +32,14 @@ static void TEST_RetSuccess(glex_ret_t glex_ret, char* str){
 
 int main(int argc, char *argv[])
 {
+	// 获取CPU halt时间
+	double SEC = 0;
+	if(argc == 2)
+		SEC = atof(argv[1]);
+	else
+		die("输入参数错误！需要一个cpu halt time。");
+	
+
 	/**** 初始化MPI环境 ****/
 	int num_procs,my_id;		//进程总数、进程ID
 	MPI_Status status;			//status对象(Status)
@@ -39,6 +51,8 @@ int main(int argc, char *argv[])
 
 	TEST_Z(num_procs == 2,
           "本程序需要且仅需要两个进程(发送和接收)。");
+	//记录MPI_Isend()开始时间，cpu占用结束时间，MPI_Wait()结束时间
+	double startTime,cpuTime,waitTime,totalTime;
 
 	/**** 配置GLEX环境 ****/
 	// 所有的glex用户接口函数返回该类型值
@@ -91,9 +105,9 @@ int main(int argc, char *argv[])
 	glex_decompose_ep_addr(ep_addr, ep_attr.type, &nicID, &EPNum);
 
 	/* 注册内存，锁内存并建立映射关系 */
-	char *mem_addr = (char *)malloc(sizeof(char)*10);
+	char mem_addr[SIZE][SIZE];
 	glex_mem_handle_t mh;
-	ret = glex_register_mem(ep, mem_addr, sizeof(char)*10, GLEX_MEM_READ|GLEX_MEM_WRITE, &mh);
+	ret = glex_register_mem(ep, mem_addr, sizeof(char)*SIZE*SIZE, GLEX_MEM_READ|GLEX_MEM_WRITE, &mh);
 
 	/****
 			交换两节点的端点地址信息（glex_ep_addr_t）
@@ -166,7 +180,7 @@ int main(int argc, char *argv[])
 			.rmt_ep_addr = remote_ep_addr,
 			.local_mh = mh,
 			.local_offset = 0,
-			.len = 7,
+			.len = SIZE*SIZE,
 			.rmt_mh = remote_mem_addr,
 			.rmt_offset = 0,
 			.type = GLEX_RDMA_TYPE_PUT,
@@ -201,7 +215,7 @@ int main(int argc, char *argv[])
 	/* 其他工作… */
 
 
-
+	/* MPI结束 */
 	MPI_Finalize();
 
 	/* 释放内存 */
