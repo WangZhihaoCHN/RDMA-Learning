@@ -10,7 +10,7 @@
 #include "mpi.h"
 
 // 内存区域大小为 SIZE*SIZE的缓冲区
-#define SIZE 200
+#define SIZE 40000
 
 static int die(const char *reason){
 	fprintf(stderr, "Err: %s - %s\n ", strerror(errno), reason);
@@ -172,7 +172,11 @@ int main(int argc, char *argv[])
 		//strcpy(mem_addr, "Hello!\n");
 		memset(mem_addr, 49, SIZE*SIZE);
 
-		// 触发的远程事件，便于被写节点知道RDMA写已完成
+		// 触发的本地和远程事件，便于被写节点知道RDMA写已完成
+		struct glex_event local_event = {
+			.cookie_0 = 11,
+			.cookie_1 = 10
+		};
 		struct glex_event remote_event = {
 			.cookie_0 = 10,
 			.cookie_1 = 11
@@ -186,45 +190,49 @@ int main(int argc, char *argv[])
 			.rmt_mh = remote_mem_addr,
 			.rmt_offset = 0,
 			.type = GLEX_RDMA_TYPE_PUT,
-			.local_evt = remote_event,
+			.local_evt = local_event,
 			.rmt_evt = remote_event,
 			.rmt_key = 13,			// ep_attr初始化时设置的
 //			.coll_counter = ,
 //			.coll_set_num = ,
-			.flag = GLEX_FLAG_REMOTE_EVT,
+			.flag = GLEX_FLAG_REMOTE_EVT | GLEX_FLAG_LOCAL_EVT,
 			.next = NULL
 		};
+
+		glex_event_t *event = (glex_event_t *)malloc(5*sizeof(glex_event_t));
+
+		// 同步
+		MPI_Barrier(MPI_COMM_WORLD);
+
+		// 开始发送计时 
+		startTime = MPI_Wtime();
 
 		// 发送RDMA PUT通信请求
 		ret = glex_rdma(ep, &rdmaReq, NULL);
 		TEST_RetSuccess(ret, "非阻塞RDMA写失败！");
+		printf("发送进程: 开始发送，占用CPU %.2lf个单位时间\n", SEC);
 
-		// 开始发送，计时 
-		startTime = MPI_Wtime();
-
-		printf("发送进程: 占用CPU %.4lf 秒\n", SEC);
-		//占用CPU一段时间（1s）
-		clock_t st, rt;				//占用cpu开始时间，占用cpu当前执行时间
-		st = clock();
-		double cps = (double)(SEC * CLOCKS_PER_SEC);  //需要占用SEC秒数
-		while(1){
-			rt = clock();
-			if( (double)(rt-st) >= cps)
-				break;
-		}
+		//占用CPU一段时间（SEC单位时间）
+		volatile double timer = 0;
+		int i=0;
+		for(i=0; i<SEC*10000000; i++)
+			timer += i*i*2;
+		
 		cpuTime = MPI_Wtime();
+		printf("发送进程: CPU占用完毕，用时 %lf 秒\n", cpuTime-startTime);
 
-		glex_event_t *event = (glex_event_t *)malloc(10*sizeof(glex_event_t));
 		ret = glex_probe_first_event(ep, -1, &event);
 		TEST_RetSuccess(ret, "写端点未接收到触发事件！");
 
-		// 记录结束时间
-		waitTime = MPI_Wtime();
-		printf("Sender: Sending task finished : %lf seconds \n", waitTime);
-		totalTime = waitTime - startTime;
-		printf("发送进程: 已经完成，用时 %.4lf 秒\n", totalTime);
+		// 同步
+		MPI_Barrier(MPI_COMM_WORLD); 
 
-		printf("cookie_0:%d, cookie_1:%d\n", event[0].cookie_0, event[0].cookie_1);
+		// 记录结束时间
+		endTime = MPI_Wtime();
+
+		totalTime = endTime - startTime;
+		printf("发送进程: 已经完成，用时 %.4lf 秒\n", totalTime);
+		printf("发送进程: cookie_0 %d, cookie_1 %d\n", event[0].cookie_0, event[0].cookie_1);
 
 		// 轮询检查RDMA操作是否出现错误请求
 /*		uint32_t num_er;
@@ -235,17 +243,18 @@ int main(int argc, char *argv[])
 */
 	}else{
 		glex_event_t *event = (glex_event_t *)malloc(10*sizeof(glex_event_t));
+
+		// 同步
+		MPI_Barrier(MPI_COMM_WORLD);
+
 		ret = glex_probe_first_event(ep, -1, &event);
 		TEST_RetSuccess(ret, "被写端点未接收到触发事件！");
+		
+		totalTime = waitTime - startTime;
+		printf("接收进程: 已经完成，用时 %.2lf，时间精度是 %lf \n", totalTime, MPI_Wtick());
 
-		// 记录结束时间
-		waitTime = MPI_Wtime();
-		printf("Receiver: Sending task finished : %lf seconds \n", waitTime);
-
-		printf("cookie_0:%d, cookie_1:%d\n", event[0].cookie_0, event[0].cookie_1);
-		printf("接收节点：接收后，buffer内容是，%s\n", mem_addr);
-		waitTime = MPI_Wtime();
-		printf("Receiver: Sending task finished : %lf seconds \n", waitTime);
+		printf("接收进程: cookie_0:%d, cookie_1:%d\n", event[0].cookie_0, event[0].cookie_1);
+		//printf("接收节点：接收后，buffer内容是，%s\n", mem_addr);
 	}
 
 
