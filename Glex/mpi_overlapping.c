@@ -62,7 +62,7 @@ int main(int argc, char *argv[])
 	// 结束计时
 	endTime = MPI_Wtime();
 	totalTime = endTime - startTime;
-	printf("数据块发送已完成，用时 %.4lf ms\n", totalTime*1000);
+	printf("数据块发送已经完成，用时 %.4lf ms\n", totalTime*1000);
 	
 	// 释放内存
 	/*for(memTmp=0; memTmp<SIZE; memTmp++)
