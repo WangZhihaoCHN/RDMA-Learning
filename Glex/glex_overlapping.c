@@ -9,9 +9,6 @@
 #include "glex.h"
 #include "mpi.h"
 
-// 内存区域大小为 SIZE*SIZE的缓冲区
-#define SIZE 1000
-
 static int die(const char *reason){
 	fprintf(stderr, "Err: %s - %s\n ", strerror(errno), reason);
 	exit(EXIT_FAILURE);
@@ -32,14 +29,17 @@ static void TEST_RetSuccess(glex_ret_t glex_ret, char* str){
 
 int main(int argc, char *argv[])
 {
-	// 获取CPU halt时间
+	// 获取数据量和CPU halt时间
 	double SEC = 0;
-	if(argc == 2)
-		SEC = atof(argv[1]);
-	else
-		die("输入参数错误！需要一个cpu halt time。");
+	int SIZE = 0;
+	if(argc == 3){
+		SIZE = atoi(argv[1]);
+		SEC = atof(argv[2]);
+	}else{
+		printf("输入参数错误！需要两个参数： 1.二维char数组维数; 2.cpu halt时长");
+		return -1;
+	}
 	
-
 	/**** 初始化MPI环境 ****/
 	int num_procs,my_id;		//进程总数、进程ID
 	MPI_Status status;			//status对象(Status)
@@ -107,10 +107,13 @@ int main(int argc, char *argv[])
 	/* 注册内存，锁内存并建立映射关系 */
 	char **mem_addr = (char **)malloc(SIZE*sizeof(char*));
 	int memTmp = 0;
-	for(memTmp=0;memTmp<SIZE;memTmp++)
+	for(memTmp=0;memTmp<SIZE;++memTmp)
 		mem_addr[memTmp] = (char*)malloc(SIZE*sizeof(char));
-	memset(mem_addr, 48, SIZE*SIZE);
-	mem_addr[SIZE*SIZE-1]='\0';
+
+	// 进程自身的buffer
+	char **userBuff = (char **)malloc(SIZE*sizeof(char*));
+	for(memTmp=0;memTmp<SIZE;++memTmp)
+		userBuff[memTmp] = (char*)malloc(SIZE*sizeof(char));
 
 	glex_mem_handle_t mh;
 	ret = glex_register_mem(ep, mem_addr, sizeof(char)*SIZE*SIZE, GLEX_MEM_READ|GLEX_MEM_WRITE, &mh);
@@ -174,10 +177,6 @@ int main(int argc, char *argv[])
 
 	/* 利用GLEX，在本地端点与远程端点之间，进行RDMA通信操作 */
 	if(my_id == 0){
-		//strcpy(mem_addr, "Hello!\n");
-		memset(mem_addr, 49, SIZE*SIZE);
-		mem_addr[SIZE*SIZE-1]='\0';
-
 		// 触发的本地和远程事件，便于被写节点知道RDMA写已完成
 		struct glex_event local_event = {
 			.cookie_0 = 11,
@@ -207,13 +206,6 @@ int main(int argc, char *argv[])
 
 		glex_event_t *event = (glex_event_t *)malloc(5*sizeof(glex_event_t));
 
-		// 进程自身的buffer
-		char **userBuff = (char **)malloc(SIZE*sizeof(char*));
-		int mallocTmp = 0;
-		for(mallocTmp=0;mallocTmp<SIZE;mallocTmp++)
-			userBuff[mallocTmp] = (char*)malloc(SIZE*sizeof(char));
-		memset(userBuff, 20, SIZE*SIZE);
-
 		// 同步
 		MPI_Barrier(MPI_COMM_WORLD);
 
@@ -231,10 +223,10 @@ int main(int argc, char *argv[])
 		//占用CPU一段时间（SEC单位时间）
 		volatile double timer = 0;
 		long i=0;
-		for(i=0; i<SEC*10000000; i++)
+		for(i=0; i<SEC*1000; i++)
 			timer += i*i*2;
 		
-		cpuTime = MPI_Wtime();
+		//cpuTime = MPI_Wtime();
 		//printf("发送进程: CPU占用完毕，用时 %lf 秒\n", cpuTime-startTime);
 
 		ret = glex_probe_first_event(ep, -1, &event);
@@ -243,9 +235,6 @@ int main(int argc, char *argv[])
 		// 同步
 		MPI_Barrier(MPI_COMM_WORLD); 
 
-		// 释放用户空间
-		free(userBuff);
-
 		// 记录结束时间
 		endTime = MPI_Wtime();
 
@@ -253,35 +242,29 @@ int main(int argc, char *argv[])
 		printf("发送进程: 已经完成，用时 %.4lf 秒\n", totalTime);
 		//printf("发送进程: cookie_0 %d, cookie_1 %d\n", event[0].cookie_0, event[0].cookie_1);
 	}else{
-		// 进程自身的buffer
-		char **userBuff = (char **)malloc(SIZE*sizeof(char*));
-		int mallocTmp = 0;
-		for(mallocTmp=0;mallocTmp<SIZE;mallocTmp++)
-			userBuff[mallocTmp] = (char*)malloc(SIZE*sizeof(char));
-		memset(userBuff, 21, SIZE*SIZE);
-
 		glex_event_t *event = (glex_event_t *)malloc(10*sizeof(glex_event_t));
 
 		// 同步
 		MPI_Barrier(MPI_COMM_WORLD);
 
-		//printf("接收节点：接收前，buffer内容是，%s\n", mem_addr);
+		//printf("接收节点：接收前，buffer内容是，%s\n", userBuff);
 		ret = glex_probe_first_event(ep, -1, &event);
 		TEST_RetSuccess(ret, "被写端点未接收到触发事件！");
-		//printf("接收节点：接收后，buffer内容是，%s\n", mem_addr);
 
 		// 将进程要发送的内存区，拷贝到相应的glex锁定的区域
 		memcpy(userBuff,mem_addr,SIZE*SIZE*sizeof(char));
+		//printf("接收节点：接收后，buffer内容是，%s\n", userBuff);
 
 		// 同步
 		MPI_Barrier(MPI_COMM_WORLD);
 
-		// 释放用户空间
-		free(userBuff);
-
 		//printf("接收进程: cookie_0:%d, cookie_1:%d\n", event[0].cookie_0, event[0].cookie_1);
 		//printf("接收节点：接收后，buffer内容是，%s\n", mem_addr);
 	}
+	// 释放用户空间
+	/*for(mallocTmp=0;mallocTmp<SIZE;mallocTmp++)
+		free(userBuff[mallocTmp]);*/
+	free(userBuff);
 
 
 	/* 其他工作… */
