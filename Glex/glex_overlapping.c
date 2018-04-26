@@ -239,7 +239,7 @@ int main(int argc, char *argv[])
 		endTime = MPI_Wtime();
 
 		totalTime = endTime - startTime;
-		printf("发送进程: 已经完成，用时 %.4lf 秒\n", totalTime);
+		printf("发送进程: 已经完成，用时 %.4lf 秒\n", totalTime*1000);
 		//printf("发送进程: cookie_0 %d, cookie_1 %d\n", event[0].cookie_0, event[0].cookie_1);
 	}else{
 		glex_event_t *event = (glex_event_t *)malloc(10*sizeof(glex_event_t));
