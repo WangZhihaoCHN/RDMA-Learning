@@ -110,8 +110,10 @@ static struct app_context *init_ctx(struct app_data *data)
 	ctx->size = data->size;
 	ctx->tx_depth = data->tx_depth;
 	
-	TEST_NZ(posix_memalign(&(ctx->buf), page_size, ctx->size * 2),
-				"无法分配工作缓冲区ctx-> buf");
+	/*TEST_NZ(posix_memalign(&(ctx->buf), page_size, ctx->size * 2),
+				"无法分配工作缓冲区ctx-> buf");*/
+	buf = (void *) malloc (ctx->size);
+
 
 	memset(ctx->buf, 0, ctx->size * 2);
 
@@ -490,11 +492,11 @@ int main(int argc, char *argv[])
 		printf("Client. Reading Local-Buffer (Buffer that was registered with MR)\n");
 		
 		char *chPtr = (char *)data.local_connection.vaddr;
-		memset(chPtr, 0, sizeof *chPtr);
+		memset(chPtr, 65, sizeof *chPtr);
 		printf("Receiver: 读取的地址为 %016Lx\n", data.local_connection.vaddr);
 
 		while(1){
-			sleep(10);
+			sleep(3);
 			printf("Printing local buffer: %s\n" ,chPtr);
 		}
 	
