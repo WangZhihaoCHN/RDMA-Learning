@@ -25,6 +25,60 @@ static void TEST_RetSuccess(glex_ret_t glex_ret, char* str){
 	}
 }
 
+/*
+ * 函数：配置GLEX环境,初始化glex相关网卡信息
+ * 参数：
+ * 返回值：nic_id
+ */
+static int init_glex_env(glex_device_handle_t *init_dev, glex_ep_handle_t *init_ep, struct glex_ep_attr* init_ep_attr, glex_ep_addr_t *init_ep_addr, 
+	uint32_t *nicID, uint32_t *EPNum){
+	// 所有的glex用户接口函数返回该类型值
+	glex_ret_t ret;
+	// GLEX设备的数量
+	uint32_t num_of_devices;
+
+	/* 获得GLEX设备的数量 */
+	glex_num_of_device(&num_of_devices);
+
+	/* 打开GLEX设备 */
+	ret = glex_open_device(0, init_dev);	//dev用于储存被打开设备的标识符
+	TEST_RetSuccess(ret, "0号设备通信接口打开失败！");
+
+	/* 获得已打开接口设备的属性信息 */
+	struct glex_device_attr dev_attr;
+	ret = glex_query_device(*init_dev, &dev_attr);
+	TEST_RetSuccess(ret, "获取通信接口属性信息失败！");
+
+	/* 在通信接口上创建一个端点，作为虚拟化硬件通信资源的软件实体 */
+	(*init_ep_attr).type = GLEX_EP_TYPE_FAST;
+	(*init_ep_attr).mpq_type = GLEX_MPQ_TYPE_NORMAL;
+	(*init_ep_attr).eq_type = GLEX_EQ_TYPE_NORMAL;
+	(*init_ep_attr).num = GLEX_ANY_EP_NUM;
+	(*init_ep_attr).key = 13;
+	//.dq_capacity = 1024;
+	//.mpq_capacity = 1024;
+	//.eq_capacity = 1024;
+	ret = glex_create_ep(*init_dev, init_ep_attr, init_ep);
+
+	/* 获得指定端点的端点地址 */
+	// 本地端点地址
+	ret = glex_get_ep_addr(*init_ep, init_ep_addr);
+	printf("获得本地端点地址！\n");
+
+	/* 获得一个端点的相关属性信息 */
+	ret = glex_query_ep(*init_ep, init_ep_attr);
+	printf("获得端点相关属性！\n");
+
+	/* 构造端点的地址 */
+	glex_compose_ep_addr(dev_attr.nic_id, (*init_ep_attr).num, (*init_ep_attr).type, init_ep_addr);
+	printf("构造端点地址！\n");
+	
+	/* 显示端点所在通信接口编号、端点序号 */
+	glex_decompose_ep_addr(*init_ep_addr, (*init_ep_attr).type, nicID, EPNum);
+
+	return 0;
+}
+
 
 int main(int argc, char *argv[])
 {
@@ -40,60 +94,23 @@ int main(int argc, char *argv[])
 	TEST_Z(num_procs == 2,
           "本程序需要且仅需要两个进程(发送和接收)。");
 
+	printf("MPI进程开始运行！\n");
 	/**** 配置GLEX环境 ****/
-	// 所有的glex用户接口函数返回该类型值
 	glex_ret_t ret;
-	// GLEX设备的数量
-	uint32_t num_of_devices;
-	// 用户定义的变量地址，用于储存互连通信接口设备的标识符
 	glex_device_handle_t dev;
-
-	/* 获得GLEX设备的数量 */
-	glex_num_of_device(&num_of_devices);
-	printf("共有%d个GLEX设备。\n", num_of_devices);
-
-	/* 打开GLEX设备 */
-	ret = glex_open_device(0, &dev);	//dev用于储存被打开设备的标识符
-	TEST_RetSuccess(ret, "0号设备通信接口打开失败！");
-
-	/* 获得已打开接口设备的属性信息 */
-	struct glex_device_attr dev_attr;
-	ret = glex_query_device(dev, &dev_attr);
-	TEST_RetSuccess(ret, "获取通信接口属性信息失败！");
-
-	/* 在通信接口上创建一个端点，作为虚拟化硬件通信资源的软件实体 */
 	glex_ep_handle_t ep;
-	struct glex_ep_attr ep_attr = {
-		.type = GLEX_EP_TYPE_FAST,
-		.mpq_type = GLEX_MPQ_TYPE_NORMAL,
-		.eq_type = GLEX_EQ_TYPE_NORMAL,
-		.num = GLEX_ANY_EP_NUM,
-		.key = 13
-		//.dq_capacity = 1024;
-		//.mpq_capacity = 1024;
-		//.eq_capacity = 1024;
-	};
-	ret = glex_create_ep(dev, &ep_attr, &ep);
-
-	/* 获得指定端点的端点地址 */
-	// 本地端点地址
+	struct glex_ep_attr ep_attr;
 	glex_ep_addr_t ep_addr;
-	ret = glex_get_ep_addr(ep, &ep_addr);
-
-	/* 获得一个端点的相关属性信息 */
-	ret = glex_query_ep(ep, &ep_attr);
-
-	/* 构造端点的地址 */
-	glex_compose_ep_addr(dev_attr.nic_id, ep_attr.num, ep_attr.type, &ep_addr);
-	
-	/* 显示端点所在通信接口编号、端点序号 */
 	uint32_t nicID, EPNum;
-	glex_decompose_ep_addr(ep_addr, ep_attr.type, &nicID, &EPNum);
+	printf("MPI进程开始运行！\n");
+	init_glex_env(&dev,&ep,&ep_attr,&ep_addr,&nicID,&EPNum);
 
+	printf("prepare to lock mem！\n");
 	/* 注册内存，锁内存并建立映射关系 */
-	char *mem_addr = (char *)malloc(sizeof(char)*10);
+	char *mem_addr = (char *)malloc(sizeof(char)*20);
 	glex_mem_handle_t mh;
-	ret = glex_register_mem(ep, mem_addr, sizeof(char)*10, GLEX_MEM_READ|GLEX_MEM_WRITE, &mh);
+	ret = glex_register_mem(ep, mem_addr, sizeof(char)*20, GLEX_MEM_READ|GLEX_MEM_WRITE, &mh);
+	printf("locked mem！\n");
 
 	/****
 			交换两节点的端点地址信息（glex_ep_addr_t）
@@ -103,6 +120,8 @@ int main(int argc, char *argv[])
 	char remoteMsg[sizeof "0000:0000:00000000:0000000000000000"];
 	int parsed;		// 用于验证接收后参数数量是否正确
 	sprintf(msg, "%04x:%04x:%08x:%016Lx", 
+				ep_addr.s.ep_num, ep_addr.s.resv, ep_addr.s.nic_id, ep_addr.v);
+	printf("端口号%04x:%04x:网卡id%08x:%016Lx\n", 
 				ep_addr.s.ep_num, ep_addr.s.resv, ep_addr.s.nic_id, ep_addr.v);
 
 	/* 利用MPI，交换发送、接收端点的地址(glex_ep_addr_t) */
@@ -122,7 +141,7 @@ int main(int argc, char *argv[])
 	// 验证接收过程和存储过程是否正常
 	if(parsed != 4)
 		fprintf(stderr, "发送和接收端点交换信息失败");
-	printf("本地端点NIC ID：%d, 端点序号: %d, 远程端点NIC ID：%d\n", nicID, EPNum, remote_ep_addr.s.nic_id);
+	printf("本地端点NIC ID：%d, 端点序号: %d, 远程端点NIC ID：%d, 远程端点序号：%d\n", nicID, EPNum, remote_ep_addr.s.nic_id, remote_ep_addr.s.ep_num);
 
 	/****
 			交换两节点的内存标识信息（glex_mem_handle_t）

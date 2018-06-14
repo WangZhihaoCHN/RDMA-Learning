@@ -26,7 +26,7 @@ static void TEST_RetSuccess(glex_ret_t glex_ret, char* str){
 }
 
 
-int main(int argc, char *argv[])
+int GLEX_Isend(int argc, char *argv[])
 {
 	/**** 初始化MPI环境 ****/
 	int num_procs,my_id;		//进程总数、进程ID
