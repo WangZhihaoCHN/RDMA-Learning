@@ -52,7 +52,7 @@ int main(int argc, char *argv[])
 	glex_num_of_device(&num_of_devices);
 	printf("共有%d个GLEX设备。\n", num_of_devices);
 
-	/* 打开GLEX-0号设备(经测试，每台机器上有两个glex设备，1号不能被打开) */
+	/* 打开GLEX设备 */
 	ret = glex_open_device(0, &dev);	//dev用于储存被打开设备的标识符
 	TEST_RetSuccess(ret, "0号设备通信接口打开失败！");
 
@@ -60,7 +60,6 @@ int main(int argc, char *argv[])
 	struct glex_device_attr dev_attr;
 	ret = glex_query_device(dev, &dev_attr);
 	TEST_RetSuccess(ret, "获取通信接口属性信息失败！");
-	printf("该设备最多有%d个普通端点。\n", dev_attr.max_ep_num);
 
 	/* 在通信接口上创建一个端点，作为虚拟化硬件通信资源的软件实体 */
 	glex_ep_handle_t ep;
