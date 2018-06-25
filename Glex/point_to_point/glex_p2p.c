@@ -18,7 +18,6 @@ static int die(const char *reason){
 	return -1;
 }
 
-
 // 如果glex_ret_t的返回值非success，则打印错误
 static void TEST_RetSuccess(glex_ret_t glex_ret, char* str){
 	if ((strcmp(glex_error_str(glex_ret), "successful") != 0)) {
@@ -66,15 +65,12 @@ static int init_glex_env(glex_device_handle_t *init_dev, glex_ep_handle_t *init_
 	/* 获得指定端点的端点地址 */
 	// 本地端点地址
 	ret = glex_get_ep_addr(*init_ep, init_ep_addr);
-	printf("获得本地端点地址！\n");
 
 	/* 获得一个端点的相关属性信息 */
 	ret = glex_query_ep(*init_ep, init_ep_attr);
-	printf("获得端点相关属性！\n");
 
 	/* 构造端点的地址 */
 	glex_compose_ep_addr(dev_attr.nic_id, (*init_ep_attr).num, (*init_ep_attr).type, init_ep_addr);
-	printf("构造端点地址！\n");
 	
 	/* 显示端点所在通信接口编号、端点序号 */
 	glex_decompose_ep_addr(*init_ep_addr, (*init_ep_attr).type, nicID, EPNum);
@@ -97,36 +93,26 @@ int main(int argc, char *argv[])
 	TEST_Z(num_procs == 2,
           "本程序需要且仅需要两个进程(发送和接收)。");
 
-	printf("MPI进程开始运行！\n");
-
 	/**** 配置GLEX环境 ****/
 	glex_ret_t ret;
 	glex_device_handle_t dev;
 	glex_ep_handle_t ep;
-	struct glex_ep_attr ep_attr;
+	struct glex_ep_attr ep_attr = {};
 	glex_ep_addr_t ep_addr;
 	uint32_t nicID, EPNum;
-	printf("MPI进程开始运行！\n");
 	init_glex_env(&dev,&ep,&ep_attr,&ep_addr,&nicID,&EPNum);
 
-	printf("prepare to lock mem！\n");
 	/* 注册内存，锁内存并建立映射关系 */
 	char *mem_addr = (char *)malloc(sizeof(char)*20);
 	glex_mem_handle_t mh;
 	ret = glex_register_mem(ep, mem_addr, sizeof(char)*20, GLEX_MEM_READ|GLEX_MEM_WRITE, &mh);
-	printf("locked mem！\n");
 
 	/****
 			交换两节点的端点地址信息（glex_ep_addr_t）
 	*****/
 	/* 定义本地端点地址和远程端点地址的char数组，便于MPI发送 */
 	char endpoint_info[num_procs][sizeof "0000:0000:00000000:0000000000000000"];
-	// char msg[sizeof "0000:0000:00000000:0000000000000000"];
-	// char remoteMsg[sizeof "0000:0000:00000000:0000000000000000"];
-	int parsed[num_procs]={0};		// 用于验证接收后参数数量是否正确
 	sprintf(endpoint_info[my_id], "%04x:%04x:%08x:%016Lx", 
-				ep_addr.s.ep_num, ep_addr.s.resv, ep_addr.s.nic_id, ep_addr.v);
-	printf("端口号%04x:%04x:网卡id%08x:%016Lx\n", 
 				ep_addr.s.ep_num, ep_addr.s.resv, ep_addr.s.nic_id, ep_addr.v);
 
 	/* 利用MPI，交换发送、接收端点的地址(glex_ep_addr_t) */ 
@@ -137,8 +123,9 @@ int main(int argc, char *argv[])
 	for(procTemp=0; procTemp<num_procs; procTemp++){
 		if(procTemp == my_id)
 			continue;
-		MPI_Isend(endpoint_info[my_id], strlen(endpoint_info[my_id]), MPI_CHAR, procTemp, 0, MPI_COMM_WORLD, &send_request[procTemp]);
-    	MPI_Irecv(endpoint_info[procTemp], strlen(endpoint_info[procTemp]), MPI_CHAR, procTemp,MPI_ANY_TAG,MPI_COMM_WORLD,&recv_request[procTemp]);
+		printf("进程%d发送给进程%d\n", my_id, procTemp);
+		MPI_Isend(endpoint_info[my_id], sizeof(endpoint_info[my_id]), MPI_CHAR, procTemp, 0, MPI_COMM_WORLD, &send_request[procTemp]);
+    	MPI_Irecv(endpoint_info[procTemp], sizeof(endpoint_info[procTemp]), MPI_CHAR, procTemp,MPI_ANY_TAG,MPI_COMM_WORLD,&recv_request[procTemp]);
 	}
 	/* 等待异步交换信息过程完成 */ 
 	for(procTemp=0; procTemp<num_procs; procTemp++){
@@ -147,51 +134,58 @@ int main(int argc, char *argv[])
 		MPI_Wait(&send_request[procTemp],&status);
 		MPI_Wait(&recv_request[procTemp],&status);
 	}
-	// if(my_id == 0){		//发送进程
-	// 	MPI_Isend(msg, strlen(msg), MPI_CHAR, 1, 0, MPI_COMM_WORLD, &handle);
-	// 	MPI_Recv(remoteMsg, strlen(msg), MPI_CHAR, 1, 0, MPI_COMM_WORLD, &status);
-	// }else{				//接收进程
-	// 	MPI_Isend(msg, strlen(msg), MPI_CHAR, 0, 0, MPI_COMM_WORLD, &handle);
-	// 	MPI_Recv(remoteMsg, strlen(msg), MPI_CHAR, 0, 0, MPI_COMM_WORLD, &status);
-	// }
 
-	/* 将接收的数据存储于remote_ep_addr中 */
-	// 各个远程端点的地址信息
+	/* 将接收的各个远程端点的地址信息数据存储于remote_ep_addr中 */
 	glex_ep_addr_t remote_ep_addr[num_procs];
-	parsed = sscanf(remoteMsg, "%x:%x:%x:%Lx", 
-					&(remote_ep_addr.s.ep_num), &(remote_ep_addr.s.resv), &(remote_ep_addr.s.nic_id), &(remote_ep_addr.v));
-	// 验证接收过程和存储过程是否正常
-	if(parsed != 4)
-		fprintf(stderr, "发送和接收端点交换信息失败");
-	printf("本地端点NIC ID：%d, 端点序号: %d, 远程端点NIC ID：%d, 远程端点序号：%d\n", nicID, EPNum, remote_ep_addr.s.nic_id, remote_ep_addr.s.ep_num);
+	int parsed = 0;		// 用于验证接收后参数数量是否正确
+	for(procTemp=0; procTemp<num_procs; procTemp++){
+		if(procTemp == my_id)
+			continue;
+		printf("进程%d发送给进程%d\n", my_id, procTemp);
+		parsed = sscanf(endpoint_info[procTemp], "%x:%x:%x:%Lx", 
+					&(remote_ep_addr[procTemp].s.ep_num), &(remote_ep_addr[procTemp].s.resv), &(remote_ep_addr[procTemp].s.nic_id), &(remote_ep_addr[procTemp].v));
+		// 验证接收过程和存储过程是否正常
+		if(parsed != 4)
+			fprintf(stderr, "进程%d发送和接收端点交换信息失败", procTemp);
+		printf("进程%d————本地端点NIC ID：%d, 端点序号: %d, 远程端点NIC ID：%d, 远程端点序号：%d\n", procTemp, nicID, EPNum, remote_ep_addr[procTemp].s.nic_id, remote_ep_addr[procTemp].s.ep_num);
+	}
 
 	/****
 			交换两节点的内存标识信息（glex_mem_handle_t）
 	*****/
 	/* 定义本地端点地址和远程端点地址的char数组(交换内存标识信息)，便于MPI发送 */
-	sprintf(msg, "%04x:%04x:%08x:%016Lx", 
+	sprintf(endpoint_info[my_id], "%04x:%04x:%08x:%016Lx", 
 				mh.s.mmt_index, mh.s.att_base_off, mh.s.att_index, mh.v);
 
-	/* 利用MPI，交换发送、接收端点的地址(glex_mem_handle_t) */
-	if(my_id == 0){		//发送进程
-		MPI_Isend(msg, strlen(msg), MPI_CHAR, 1, 0, MPI_COMM_WORLD, &handle);
-		MPI_Recv(remoteMsg, strlen(msg), MPI_CHAR, 1, 0, MPI_COMM_WORLD, &status);
-	}else{				//接收进程
-		MPI_Isend(msg, strlen(msg), MPI_CHAR, 0, 0, MPI_COMM_WORLD, &handle);
-		MPI_Recv(remoteMsg, strlen(msg), MPI_CHAR, 0, 0, MPI_COMM_WORLD, &status);
+	/* 利用MPI，交换发送、接收端点的地址(glex_mem_handle_t) */ 
+	for(procTemp=0; procTemp<num_procs; procTemp++){
+		if(procTemp == my_id)
+			continue;
+		MPI_Isend(endpoint_info[my_id], sizeof(endpoint_info[my_id]), MPI_CHAR, procTemp, 0, MPI_COMM_WORLD, &send_request[procTemp]);
+    	MPI_Irecv(endpoint_info[procTemp], sizeof(endpoint_info[procTemp]), MPI_CHAR, procTemp,MPI_ANY_TAG,MPI_COMM_WORLD,&recv_request[procTemp]);
+	} 
+	for(procTemp=0; procTemp<num_procs; procTemp++){
+		if(procTemp == my_id)
+			continue;
+		MPI_Wait(&send_request[procTemp],&status);
+		MPI_Wait(&recv_request[procTemp],&status);
 	}
 
 	/* 将接收的数据存储于remote_mem_addr中 */
 	// 存储远程端点内存标识
-	glex_mem_handle_t remote_mem_addr;
-	parsed = sscanf(remoteMsg, "%x:%x:%x:%Lx", 
-					&(remote_mem_addr.s.mmt_index), &(remote_mem_addr.s.att_base_off), &(remote_mem_addr.s.att_index), &(remote_mem_addr.v));
-	// 验证接收过程和存储过程是否正常
-	if(parsed != 4){
-		fprintf(stderr, "发送和接收端点交换信息失败");
-		return -1;
+	glex_mem_handle_t remote_mem_addr[num_procs];
+	for(procTemp=0; procTemp<num_procs; procTemp++){
+		if(procTemp == my_id)
+			continue;
+		parsed = sscanf(endpoint_info[procTemp], "%x:%x:%x:%Lx", 
+					&(remote_mem_addr[procTemp].s.mmt_index), &(remote_mem_addr[procTemp].s.att_base_off), &(remote_mem_addr[procTemp].s.att_index), &(remote_mem_addr[procTemp].v));
+		// 验证接收过程和存储过程是否正常
+		if(parsed != 4){
+			fprintf(stderr, "发送和接收端点交换信息失败");
+			return -1;
+		}
+		printf("本地端点mmt_index：%d, 远程端点mmt_index：%d\n", mh.s.mmt_index, remote_mem_addr[procTemp].s.mmt_index);
 	}
-	printf("本地端点mmt_index：%d, 远程端点mmt_index：%d\n", mh.s.mmt_index, remote_mem_addr.s.mmt_index);
 
 	/* 利用GLEX，在本地端点与远程端点之间，进行RDMA通信操作 */
 	if(my_id == 0){
@@ -204,11 +198,11 @@ int main(int argc, char *argv[])
 		};
 
 		struct glex_rdma_req rdmaReq = {
-			.rmt_ep_addr = remote_ep_addr,
+			.rmt_ep_addr = remote_ep_addr[1],
 			.local_mh = mh,
 			.local_offset = 0,
 			.len = 7,
-			.rmt_mh = remote_mem_addr,
+			.rmt_mh = remote_mem_addr[1],
 			.rmt_offset = 0,
 			.type = GLEX_RDMA_TYPE_PUT,
 //			.local_evt = ,
