@@ -86,6 +86,7 @@ int main(int argc, char *argv[])
 	MPI_Status status;			//status对象(Status)
 	MPI_Request handle;			//MPI请求(request)
 	int ierr;					//MPI返回值
+	double inittime,recvtime,totaltime;
 
 	MPI_Init(&argc,&argv);
 	MPI_Comm_size(MPI_COMM_WORLD,&num_procs);
@@ -161,7 +162,7 @@ int main(int argc, char *argv[])
 		// 验证接收过程和存储过程是否正常
 		if(parsed != 4)
 			fprintf(stderr, "进程%d发送和接收端点交换信息失败", procTemp);
-		printf("本地%d————本地端点NIC ID：%d, 端点序号: %d \n远程%d————远程端点NIC ID：%d, 远程端点序号：%d\n", my_id, nicID, EPNum, procTemp,remote_ep_addr[procTemp].s.nic_id, remote_ep_addr[procTemp].s.ep_num);
+		// printf("本地%d————本地端点NIC ID：%d, 端点序号: %d \n远程%d————远程端点NIC ID：%d, 远程端点序号：%d\n", my_id, nicID, EPNum, procTemp,remote_ep_addr[procTemp].s.nic_id, remote_ep_addr[procTemp].s.ep_num);
 	}
 
 	/****
@@ -242,102 +243,114 @@ int main(int argc, char *argv[])
 				fprintf(stderr, "发送和接收端点交换信息失败");
 				return -1;
 			}
-			printf("本地端点mmt_index：%d, 远程端点mmt_index：%d\n", mh[fx].s.mmt_index, remote_mem_addr[fx].s.mmt_index);
+			// printf("本地端点mmt_index：%d, 远程端点mmt_index：%d\n", mh[fx].s.mmt_index, remote_mem_addr[fx].s.mmt_index);
 		}
 	}
 
-	/* 利用GLEX，在本地端点与远程端点之间，进行RDMA通信操作 */
-	if(my_id == 0){
-		// strcpy(sendbuff[0], "Hello!\n");
+	// 触发的远程事件，便于被写节点知道RDMA写已完成
+	struct glex_event remote_event0 = {
+		.cookie_0 = 10,
+		.cookie_1 = 11
+	};
+	struct glex_event remote_event1 = {
+		.cookie_0 = 10,
+		.cookie_1 = 12
+	};
+	struct glex_event remote_event2 = {
+		.cookie_0 = 10,
+		.cookie_1 = 13
+	};
+	struct glex_event remote_event3 = {
+		.cookie_0 = 10,
+		.cookie_1 = 14
+	};
 
-		// 触发的远程事件，便于被写节点知道RDMA写已完成
-		struct glex_event remote_event = {
-			.cookie_0 = 10,
-			.cookie_1 = 11
-		};
+	// RDMA操作的四个数据包
+	struct glex_rdma_req rdmaReq3 = {
+		.rmt_ep_addr = remote_ep_addr[3],
+		.local_mh = mh[3],
+		.local_offset = 0,
+		.len = sizeof(double)*buffsize,
+		.rmt_mh = remote_mem_addr[3],
+		.rmt_offset = 0,
+		.type = GLEX_RDMA_TYPE_PUT,
+//		.local_evt = ,
+		.rmt_evt = remote_event3,
+		.rmt_key = 13,			// ep_attr初始化时设置的
+//		.coll_counter = ,
+//		.coll_set_num = ,
+		.flag = GLEX_FLAG_REMOTE_EVT,
+		.next = NULL
+	};
+	struct glex_rdma_req rdmaReq2 = {
+		.rmt_ep_addr = remote_ep_addr[2],
+		.local_mh = mh[2],
+		.local_offset = 0,
+		.len = sizeof(double)*buffsize,
+		.rmt_mh = remote_mem_addr[2],
+		.rmt_offset = 0,
+		.type = GLEX_RDMA_TYPE_PUT,
+//		.local_evt = ,
+		.rmt_evt = remote_event2,
+		.rmt_key = 13,			// ep_attr初始化时设置的
+//		.coll_counter = ,
+//		.coll_set_num = ,
+		.flag = GLEX_FLAG_REMOTE_EVT,
+		.next = &rdmaReq3
+	};
+	struct glex_rdma_req rdmaReq1 = {
+		.rmt_ep_addr = remote_ep_addr[1],
+		.local_mh = mh[1],
+		.local_offset = 0,
+		.len = sizeof(double)*buffsize,
+		.rmt_mh = remote_mem_addr[1],
+		.rmt_offset = 0,
+		.type = GLEX_RDMA_TYPE_PUT,
+//		.local_evt = ,
+		.rmt_evt = remote_event1,
+		.rmt_key = 13,			// ep_attr初始化时设置的
+//		.coll_counter = ,
+//		.coll_set_num = ,
+		.flag = GLEX_FLAG_REMOTE_EVT,
+		.next = &rdmaReq2
+	};
+	struct glex_rdma_req rdmaReq0 = {
+		.rmt_ep_addr = remote_ep_addr[0],
+		.local_mh = mh[0],
+		.local_offset = 0,
+		.len = sizeof(double)*buffsize,
+		.rmt_mh = remote_mem_addr[0],
+		.rmt_offset = 0,
+		.type = GLEX_RDMA_TYPE_PUT,
+//		.local_evt = ,
+		.rmt_evt = remote_event0,
+		.rmt_key = 13,			// ep_attr初始化时设置的
+//		.coll_counter = ,
+//		.coll_set_num = ,
+		.flag = GLEX_FLAG_REMOTE_EVT,
+		.next = &rdmaReq1
+	};
 
-		struct glex_rdma_req rdmaReq4 = {
-			.rmt_ep_addr = remote_ep_addr[1],
-			.local_mh = mh[4],
-			.local_offset = 0,
-			.len = 7,
-			.rmt_mh = remote_mem_addr[4],
-			.rmt_offset = 0,
-			.type = GLEX_RDMA_TYPE_PUT,
-//			.local_evt = ,
-			.rmt_evt = remote_event,
-			.rmt_key = 13,			// ep_attr初始化时设置的
-//			.coll_counter = ,
-//			.coll_set_num = ,
-			.flag = GLEX_FLAG_REMOTE_EVT,
-			.next = NULL
-		};
-		struct glex_rdma_req rdmaReq3 = {
-			.rmt_ep_addr = remote_ep_addr[1],
-			.local_mh = mh[3],
-			.local_offset = 0,
-			.len = 7,
-			.rmt_mh = remote_mem_addr[3],
-			.rmt_offset = 0,
-			.type = GLEX_RDMA_TYPE_PUT,
-//			.local_evt = ,
-			.rmt_evt = remote_event,
-			.rmt_key = 13,			// ep_attr初始化时设置的
-//			.coll_counter = ,
-//			.coll_set_num = ,
-			.flag = GLEX_FLAG_REMOTE_EVT,
-			.next = &rdmaReq4
-		};
-		struct glex_rdma_req rdmaReq2 = {
-			.rmt_ep_addr = remote_ep_addr[1],
-			.local_mh = mh[2],
-			.local_offset = 0,
-			.len = 7,
-			.rmt_mh = remote_mem_addr[2],
-			.rmt_offset = 0,
-			.type = GLEX_RDMA_TYPE_PUT,
-//			.local_evt = ,
-			.rmt_evt = remote_event,
-			.rmt_key = 13,			// ep_attr初始化时设置的
-//			.coll_counter = ,
-//			.coll_set_num = ,
-			.flag = GLEX_FLAG_REMOTE_EVT,
-			.next = &rdmaReq3
-		};
-		struct glex_rdma_req rdmaReq1 = {
-			.rmt_ep_addr = remote_ep_addr[1],
-			.local_mh = mh[1],
-			.local_offset = 0,
-			.len = 7,
-			.rmt_mh = remote_mem_addr[1],
-			.rmt_offset = 0,
-			.type = GLEX_RDMA_TYPE_PUT,
-//			.local_evt = ,
-			.rmt_evt = remote_event,
-			.rmt_key = 13,			// ep_attr初始化时设置的
-//			.coll_counter = ,
-//			.coll_set_num = ,
-			.flag = GLEX_FLAG_REMOTE_EVT,
-			.next = &rdmaReq2
-		};
+	/* 开始glex-RDMA版二维影响区交换 */
+	MPI_Barrier(MPI_COMM_WORLD); 
+    inittime = MPI_Wtime();
 
-		// 发送RDMA PUT通信请求
-		ret = glex_rdma(ep, &rdmaReq1, NULL);
-		TEST_RetSuccess(ret, "非阻塞RDMA写失败！");
+	// 发送RDMA PUT通信请求
+	ret = glex_rdma(ep, &rdmaReq0, NULL);
+	TEST_RetSuccess(ret, "非阻塞RDMA写失败！");
+    
+    glex_event_t *event = (glex_event_t *)malloc(10*sizeof(glex_event_t));
+	ret = glex_probe_first_event(ep, -1, &event);
+	TEST_RetSuccess(ret, "被写端点未接收到触发事件！");
 
-		// 轮询检查RDMA操作是否出现错误请求
-		uint32_t num_er;
-		struct glex_err_req *er_list;
-		ret = glex_poll_error_req(ep, &num_er, er_list);
-		if(num_er != 0)
-			printf("%s\n", "glex_rdma操作失败，num_er不为0。");
-	}else if(my_id == 1){
-		glex_event_t *event = (glex_event_t *)malloc(10*sizeof(glex_event_t));
-		ret = glex_probe_first_event(ep, -1, &event);
-		TEST_RetSuccess(ret, "被写端点未接收到触发事件！");
-		printf("cookie_0:%d, cookie_1:%d\n", event[0].cookie_0, event[0].cookie_1);
-		//printf("接收节点：接收后，buffer内容是，%s\n", mem_addr);
-	}
+	for(fx=0; fx<4; fx++)
+		printf("cookie_0:%d, cookie_1:%d\n", event[fx].cookie_0, event[fx].cookie_1);
+
+	MPI_Barrier(MPI_COMM_WORLD); 
+	recvtime = MPI_Wtime();
+    totaltime = recvtime - inittime;
+	printf("二维影响区交换已经完成，用时 %.4lf ms\n", totaltime*1000);
+	
 
 	/* 其他工作… */
 
