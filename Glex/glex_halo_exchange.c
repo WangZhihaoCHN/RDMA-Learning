@@ -162,7 +162,7 @@ int main(int argc, char *argv[])
 		// 验证接收过程和存储过程是否正常
 		if(parsed != 4)
 			fprintf(stderr, "进程%d发送和接收端点交换信息失败", procTemp);
-		// printf("本地%d————本地端点NIC ID：%d, 端点序号: %d \n远程%d————远程端点NIC ID：%d, 远程端点序号：%d\n", my_id, nicID, EPNum, procTemp,remote_ep_addr[procTemp].s.nic_id, remote_ep_addr[procTemp].s.ep_num);
+		printf("本地%d————本地端点NIC ID：%d, 端点序号: %d \n远程%d————远程端点NIC ID：%d, 远程端点序号：%d\n", my_id, nicID, EPNum, procTemp,remote_ep_addr[procTemp].s.nic_id, remote_ep_addr[procTemp].s.ep_num);
 	}
 
 	/****
@@ -265,9 +265,33 @@ int main(int argc, char *argv[])
 		.cookie_1 = 14
 	};
 
+
+	// 判断当前结点的上下左右四个结点分别的进程号
+	int up,down,left,right;
+	if(my_id != 0 && (my_id-1)/col == my_id/col){
+		left = my_id-1;
+    }else{
+    	left = my_id+col-1;
+    }
+    if((my_id+1)/col == my_id/col){
+    	right = my_id+1;
+    }else{
+    	right = my_id-col+1;
+    }
+    if((my_id-col)>=0){
+    	up = my_id-col;
+    }else{
+    	up = my_id+(row-1)*col;
+    }
+    if((my_id+col)<num_procs){
+    	down = my_id+col;
+    }else{
+    	down = my_id-(row-1)*col;
+    }
+
 	// RDMA操作的四个数据包
 	struct glex_rdma_req rdmaReq3 = {
-		.rmt_ep_addr = remote_ep_addr[3],
+		.rmt_ep_addr = remote_ep_addr[down],
 		.local_mh = mh[3],
 		.local_offset = 0,
 		.len = sizeof(double)*buffsize,
@@ -283,7 +307,7 @@ int main(int argc, char *argv[])
 		.next = NULL
 	};
 	struct glex_rdma_req rdmaReq2 = {
-		.rmt_ep_addr = remote_ep_addr[2],
+		.rmt_ep_addr = remote_ep_addr[up],
 		.local_mh = mh[2],
 		.local_offset = 0,
 		.len = sizeof(double)*buffsize,
@@ -299,7 +323,7 @@ int main(int argc, char *argv[])
 		.next = &rdmaReq3
 	};
 	struct glex_rdma_req rdmaReq1 = {
-		.rmt_ep_addr = remote_ep_addr[1],
+		.rmt_ep_addr = remote_ep_addr[right],
 		.local_mh = mh[1],
 		.local_offset = 0,
 		.len = sizeof(double)*buffsize,
@@ -315,7 +339,7 @@ int main(int argc, char *argv[])
 		.next = &rdmaReq2
 	};
 	struct glex_rdma_req rdmaReq0 = {
-		.rmt_ep_addr = remote_ep_addr[0],
+		.rmt_ep_addr = remote_ep_addr[left],
 		.local_mh = mh[0],
 		.local_offset = 0,
 		.len = sizeof(double)*buffsize,
@@ -340,13 +364,13 @@ int main(int argc, char *argv[])
 	TEST_RetSuccess(ret, "非阻塞RDMA写失败！");
     
     glex_event_t *event = (glex_event_t *)malloc(10*sizeof(glex_event_t));
-	ret = glex_probe_first_event(ep, -1, &event);
-	TEST_RetSuccess(ret, "被写端点未接收到触发事件！");
-
-	for(fx=0; fx<4; fx++)
+    for(fx=0; fx<4; fx++){
+		ret = glex_probe_first_event(ep, -1, &event);
+		TEST_RetSuccess(ret, "被写端点未接收到触发事件！");
 		printf("cookie_0:%d, cookie_1:%d\n", event[fx].cookie_0, event[fx].cookie_1);
+    }
 
-	MPI_Barrier(MPI_COMM_WORLD); 
+	//MPI_Barrier(MPI_COMM_WORLD); 
 	recvtime = MPI_Wtime();
     totaltime = recvtime - inittime;
 	printf("二维影响区交换已经完成，用时 %.4lf ms\n", totaltime*1000);
