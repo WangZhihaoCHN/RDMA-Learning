@@ -162,8 +162,9 @@ int main(int argc, char *argv[])
 		// 验证接收过程和存储过程是否正常
 		if(parsed != 4)
 			fprintf(stderr, "进程%d发送和接收端点交换信息失败", procTemp);
-		printf("本地%d————本地端点NIC ID：%d, 端点序号: %d \n远程%d————远程端点NIC ID：%d, 远程端点序号：%d\n", my_id, nicID, EPNum, procTemp,remote_ep_addr[procTemp].s.nic_id, remote_ep_addr[procTemp].s.ep_num);
+		// printf("本地%d————本地端点NIC ID：%d, 端点序号: %d \n远程%d————远程端点NIC ID：%d, 远程端点序号：%d\n", my_id, nicID, EPNum, procTemp,remote_ep_addr[procTemp].s.nic_id, remote_ep_addr[procTemp].s.ep_num);
 	}
+	printf("本地%d————本地端点NIC ID：%d, 端点序号: %d\n", my_id, nicID, EPNum);
 
 	/****
 			交换两节点的内存标识信息（glex_mem_handle_t）
@@ -253,15 +254,15 @@ int main(int argc, char *argv[])
 		.cookie_1 = 11
 	};
 	struct glex_event remote_event1 = {
-		.cookie_0 = 10,
+		.cookie_0 = 11,
 		.cookie_1 = 12
 	};
 	struct glex_event remote_event2 = {
-		.cookie_0 = 10,
+		.cookie_0 = 12,
 		.cookie_1 = 13
 	};
 	struct glex_event remote_event3 = {
-		.cookie_0 = 10,
+		.cookie_0 = 13,
 		.cookie_1 = 14
 	};
 
@@ -355,6 +356,8 @@ int main(int argc, char *argv[])
 		.next = &rdmaReq1
 	};
 
+	printf("process %d——left:%d,right:%d,up:%d,down:%d\n",my_id,remote_ep_addr[left].s.nic_id,remote_ep_addr[right].s.nic_id,remote_ep_addr[up].s.nic_id,remote_ep_addr[down].s.nic_id);
+
 	/* 开始glex-RDMA版二维影响区交换 */
 	MPI_Barrier(MPI_COMM_WORLD); 
     inittime = MPI_Wtime();
@@ -367,13 +370,15 @@ int main(int argc, char *argv[])
     for(fx=0; fx<4; fx++){
 		ret = glex_probe_first_event(ep, -1, &event);
 		TEST_RetSuccess(ret, "被写端点未接收到触发事件！");
-		printf("cookie_0:%d, cookie_1:%d\n", event[fx].cookie_0, event[fx].cookie_1);
+		printf("process %d_%d —— cookie_0:%d, cookie_1:%d\n", my_id, fx, event[0].cookie_0, event[0].cookie_1);
+    	ret = glex_discard_probed_event(ep);
+		TEST_RetSuccess(ret, "清除event队列异常！");
     }
 
-	//MPI_Barrier(MPI_COMM_WORLD); 
+	MPI_Barrier(MPI_COMM_WORLD); 
 	recvtime = MPI_Wtime();
     totaltime = recvtime - inittime;
-	printf("二维影响区交换已经完成，用时 %.4lf ms\n", totaltime*1000);
+	printf("process %d —— 二维影响区交换已经完成，用时 %.4lf ms\n", my_id, totaltime*1000);
 	
 
 	/* 其他工作… */
