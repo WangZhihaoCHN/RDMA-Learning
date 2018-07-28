@@ -19,7 +19,7 @@ int main(int argc, char *argv[])
 	int num_procs,my_id,flag;	//进程总数、进程ID、传输是否完成标识
 	
 	//发送缓冲区
-	char **buf = (char**)malloc(SIZE*SIZE*sizeof(char*));	
+	char **buf = (char**)malloc(SIZE*sizeof(char*));	
 	int memTmp = 0;
 	for(memTmp=0;memTmp<SIZE;++memTmp)
 		buf[memTmp] = (char*)malloc(SIZE*sizeof(char));
@@ -63,12 +63,13 @@ int main(int argc, char *argv[])
 	endTime = MPI_Wtime();
 	totalTime = endTime - startTime;
 	printf("数据块发送已经完成，用时 %.4lf ms\n", totalTime*1000);
-	
-	// 释放内存
-	/*for(memTmp=0; memTmp<SIZE; memTmp++)
-		free(buf[memTmp]);*/
-	free(buf);
 
 	MPI_Finalize();
+
+	// 释放内存
+	// for(memTmp=0; memTmp<SIZE; memTmp++)
+	// 	free(buf[memTmp]);
+	free(buf);
+	
 	return 0;
 }
