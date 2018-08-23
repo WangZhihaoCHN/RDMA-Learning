@@ -366,13 +366,12 @@ int main(int argc, char *argv[])
 
 	/* 开始glex-RDMA版二维影响区交换，循环十次取均值 */
     int loop = 0;
-    double totla_time[10];
     totaltime = 0;
 	MPI_Barrier(MPI_COMM_WORLD); 
-	glex_event_t *event = (glex_event_t *)malloc(40*sizeof(glex_event_t));
-	for(loop=0;loop<10;loop++){
-		inittime = MPI_Wtime();
-
+	glex_event_t *event = (glex_event_t *)malloc(5*sizeof(glex_event_t));
+	
+	inittime = MPI_Wtime();
+	for(loop=0;loop<1000;loop++){
 		// 发送RDMA PUT通信请求
 		ret = glex_rdma(ep, &rdmaReq0, NULL);
 		TEST_RetSuccess(ret, "非阻塞RDMA写失败！");
@@ -384,19 +383,12 @@ int main(int argc, char *argv[])
 	    	ret = glex_discard_probed_event(ep);
 			TEST_RetSuccess(ret, "清除event队列异常！");
 		}
-
 		MPI_Barrier(MPI_COMM_WORLD); 
-		recvtime = MPI_Wtime();
-		totla_time[loop] = recvtime - inittime;
-		totaltime += totla_time[loop];
 	}
 	if(my_id == 0){
-		printf("process %d —— 二维影像区交换已经完成，用时 %.4lf ms\n", my_id, totaltime*1000/10);
-		printf("十次的值分别为：");
-		for(loop=0;loop<10;loop++){
-			printf("%.4lf\t",totla_time[loop]*1000);
-		}
-		printf("\n");
+		recvtime = MPI_Wtime();
+		double totaltime = (recvtime - inittime) * 1e6 / (2.0 * 1000);
+		printf("process %d —— 二维影像区交换已经完成，用时 %.5lf us\n", my_id, totaltime);
 	}
 	
 	/* 其他工作… */
