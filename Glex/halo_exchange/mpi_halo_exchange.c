@@ -41,11 +41,10 @@ int main(int argc,char** argv)
 
     /* 进行通信,发送时需要注意上下左右边界问题 */
     int loop = 0;
-    double totla_time[10];
     totaltime = 0;
     MPI_Barrier(MPI_COMM_WORLD); 
-    for(loop=0;loop<10;loop++){
-        inittime = MPI_Wtime();
+    inittime = MPI_Wtime();
+    for(loop=0;loop<1000;loop++){
         // 向左进程发送与接收
         if(taskid != 0 && (taskid-1)/col == taskid/col){
         	//printf("rank %d 的左进程为 %d\n", taskid, taskid-1);
@@ -92,17 +91,11 @@ int main(int argc,char** argv)
         ierr = MPI_Waitall(4, recv_request, status);
 
         MPI_Barrier(MPI_COMM_WORLD);
-        recvtime = MPI_Wtime();
-        totla_time[loop] = recvtime - inittime;
-        totaltime += totla_time[loop];
     }
     if(taskid == 0){
-        printf("process %d —— 二维影像区交换已经完成，用时 %.4lf ms\n", taskid, totaltime*1000/10);
-        printf("十次的值分别为：");
-        for(loop=0;loop<10;loop++){
-            printf("%.4lf\t",totla_time[loop]*1000);
-        }
-        printf("\n");
+        recvtime = MPI_Wtime();
+        double totaltime = (recvtime - inittime) * 1e6 / (2.0 * 1000);
+        printf("process %d —— 二维影像区交换已经完成，用时 %.5lf us\n", taskid, totaltime);
     }
 
     /* 释放资源 */
