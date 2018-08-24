@@ -88,7 +88,6 @@ int main(int argc, char *argv[])
 	MPI_Request handle;			//MPI请求(request)
 	int ierr;					//MPI返回值
 	double inittime,recvtime,totaltime;
-	double reg_start,reg_end;
 
 	MPI_Init(&argc,&argv);
 	MPI_Comm_size(MPI_COMM_WORLD,&num_procs);
@@ -117,7 +116,6 @@ int main(int argc, char *argv[])
 	for(memTmp=0;memTmp<4;++memTmp)
 		recvbuff[memTmp] = (double*)malloc(buffsize*sizeof(double));
 
-	reg_start = MPI_Wtime();
 	glex_mem_handle_t mh[4];
 	// 存储远程端点内存标识
 	glex_mem_handle_t remote_mem_addr[4];
@@ -125,10 +123,7 @@ int main(int argc, char *argv[])
 		ret = glex_register_mem(ep, sendbuff[memTmp], sizeof(double)*buffsize, GLEX_MEM_READ|GLEX_MEM_WRITE, &mh[memTmp]);
 		ret = glex_register_mem(ep, recvbuff[memTmp], sizeof(double)*buffsize, GLEX_MEM_READ|GLEX_MEM_WRITE, &remote_mem_addr[memTmp]);
 	}
-	reg_end = MPI_Wtime();
-	if(my_id == 0)
-		printf("process %d: 内存注册锁定用时 %.4lf ms\n", my_id, (reg_end-reg_start)*1000);
-
+	
 	/****
 			交换两节点的端点地址信息（glex_ep_addr_t）
 	*****/
@@ -304,7 +299,7 @@ int main(int argc, char *argv[])
 		.len = sizeof(double)*buffsize,
 		.rmt_mh = remote_mem_addr[3],
 		.rmt_offset = 0,
-		.type = GLEX_RDMA_TYPE_PUT,
+		.type = GLEX_RDMA_TYPE_GET,
 //		.local_evt = ,
 		.rmt_evt = remote_event3,
 		.rmt_key = 13,			// ep_attr初始化时设置的
@@ -320,7 +315,7 @@ int main(int argc, char *argv[])
 		.len = sizeof(double)*buffsize,
 		.rmt_mh = remote_mem_addr[2],
 		.rmt_offset = 0,
-		.type = GLEX_RDMA_TYPE_PUT,
+		.type = GLEX_RDMA_TYPE_GET,
 //		.local_evt = ,
 		.rmt_evt = remote_event2,
 		.rmt_key = 13,			// ep_attr初始化时设置的
@@ -336,7 +331,7 @@ int main(int argc, char *argv[])
 		.len = sizeof(double)*buffsize,
 		.rmt_mh = remote_mem_addr[1],
 		.rmt_offset = 0,
-		.type = GLEX_RDMA_TYPE_PUT,
+		.type = GLEX_RDMA_TYPE_GET,
 //		.local_evt = ,
 		.rmt_evt = remote_event1,
 		.rmt_key = 13,			// ep_attr初始化时设置的
@@ -352,7 +347,7 @@ int main(int argc, char *argv[])
 		.len = sizeof(double)*buffsize,
 		.rmt_mh = remote_mem_addr[0],
 		.rmt_offset = 0,
-		.type = GLEX_RDMA_TYPE_PUT,
+		.type = GLEX_RDMA_TYPE_GET,
 //		.local_evt = ,
 		.rmt_evt = remote_event0,
 		.rmt_key = 13,			// ep_attr初始化时设置的
@@ -388,7 +383,8 @@ int main(int argc, char *argv[])
 	if(my_id == 0){
 		recvtime = MPI_Wtime();
 		double totaltime = (recvtime - inittime) * 1e6 / (2.0 * 1000);
-		printf("process %d —— 二维影像区交换已经完成，用时 %.5lf us\n", my_id, totaltime);
+		printf("GLEX_HALO_EXCHANGE: Trans %d Bytes,",buffsize*8);
+        printf("totaltime %.5lf us\n", totaltime);
 	}
 	
 	/* 其他工作… */

@@ -1,117 +1,52 @@
 #!/bin/bash
-mv Config_480 Config
-mv TM_Mapping_Perm_480 TM_Mapping_Perm
-yhrun -N 20 -n 480 ./pingpong
+yhrun -p test -N 4 -n 4 ./mpi_halo_exchange 2 2 1
 wait
-yhrun -N 20 -n 480 ./tea_leaf
+yhrun -p test -N 4 -n 4 ./glex_halo_exchange 2 2 1
 wait
-yhrun -N 20 -n 480 ./tea_leaf
+yhrun -p test -N 4 -n 4 ./mpi_halo_exchange 2 2 10
 wait
-yhrun -N 20 -n 480 ./tea_leaf
+yhrun -p test -N 4 -n 4 ./glex_halo_exchange 2 2 10
 wait
-yhrun -N 20 -n 480 ./tea_leaf
+yhrun -p test -N 4 -n 4 ./mpi_halo_exchange 2 2 100
 wait
-yhrun -N 20 -n 480 ./tea_leaf
+yhrun -p test -N 4 -n 4 ./glex_halo_exchange 2 2 100
 wait
-yhrun -N 1 -n 1  ./RCR
+yhrun -p test -N 4 -n 4 ./mpi_halo_exchange 2 2 1000
 wait
-yhrun -N 20 -n 480  -m arbitrary -w ./RCR_Mapping_Result ./tea_leaf
+yhrun -p test -N 4 -n 4 ./glex_halo_exchange 2 2 1000
 wait
-yhrun -N 20 -n 480  -m arbitrary -w ./RCR_Mapping_Result ./tea_leaf
+yhrun -p test -N 4 -n 4 ./mpi_halo_exchange 2 2 10000
 wait
-yhrun -N 20 -n 480  -m arbitrary -w ./RCR_Mapping_Result ./tea_leaf
+yhrun -p test -N 4 -n 4 ./glex_halo_exchange 2 2 10000
 wait
-yhrun -N 20 -n 480  -m arbitrary -w ./RCR_Mapping_Result ./tea_leaf
+yhrun -p test -N 4 -n 4 ./mpi_halo_exchange 2 2 20000
 wait
-yhrun -N 20 -n 480  -m arbitrary -w ./RCR_Mapping_Result ./tea_leaf
+yhrun -p test -N 4 -n 4 ./glex_halo_exchange 2 2 20000
 wait
-yhrun -N 1 -n 1 ./TM_Mapping
+yhrun -p test -N 4 -n 4 ./mpi_halo_exchange 2 2 40000
 wait
-yhrun -N 20 -n 480  -m arbitrary -w ./TM_Mapping_Result ./tea_leaf
+yhrun -p test -N 4 -n 4 ./glex_halo_exchange 2 2 40000
 wait
-yhrun -N 20 -n 480  -m arbitrary -w ./TM_Mapping_Result ./tea_leaf
+yhrun -p test -N 4 -n 4 ./mpi_halo_exchange 2 2 80000
 wait
-yhrun -N 20 -n 480  -m arbitrary -w ./TM_Mapping_Result ./tea_leaf
+yhrun -p test -N 4 -n 4 ./glex_halo_exchange 2 2 80000
 wait
-yhrun -N 20 -n 480  -m arbitrary -w ./TM_Mapping_Result ./tea_leaf
+yhrun -p test -N 4 -n 4 ./mpi_halo_exchange 2 2 100000
 wait
-yhrun -N 20 -n 480  -m arbitrary -w ./TM_Mapping_Result ./tea_leaf
-
-mv Config_512 Config
-mv TM_Mapping_Perm_512 TM_Mapping_Perm
-
-yhrun -N 22 -n 512 ./pingpong 
+yhrun -p test -N 4 -n 4 ./glex_halo_exchange 2 2 100000
 wait
-yhrun -N 22 -n 512 ./tea_leaf
-wait               
-yhrun -N 22 -n 512 ./tea_leaf
-wait               
-yhrun -N 22 -n 512 ./tea_leaf
-wait               
-yhrun -N 22 -n 512 ./tea_leaf
-wait               
-yhrun -N 22 -n 512 ./tea_leaf
+yhrun -p test -N 4 -n 4 ./mpi_halo_exchange 2 2 400000
 wait
-yhrun -N 1 -n 1  ./RCR
+yhrun -p test -N 4 -n 4 ./glex_halo_exchange 2 2 400000
 wait
-yhrun -N 22 -n 512 -m arbitrary -w ./RCR_Mapping_Result ./tea_leaf
-wait               
-yhrun -N 22 -n 512 -m arbitrary -w ./RCR_Mapping_Result ./tea_leaf
-wait               
-yhrun -N 22 -n 512 -m arbitrary -w ./RCR_Mapping_Result ./tea_leaf
-wait               
-yhrun -N 22 -n 512 -m arbitrary -w ./RCR_Mapping_Result ./tea_leaf
-wait               
-yhrun -N 22 -n 512 -m arbitrary -w ./RCR_Mapping_Result ./tea_leaf
+yhrun -p test -N 4 -n 4 ./mpi_halo_exchange 2 2 1000000
 wait
-yhrun -N 1 -n 1 ./TM_Mapping
+yhrun -p test -N 4 -n 4 ./glex_halo_exchange 2 2 1000000
 wait
-yhrun -N 22 -n 512 -m arbitrary -w ./TM_Mapping_Result ./tea_leaf
-wait               
-yhrun -N 22 -n 512 -m arbitrary -w ./TM_Mapping_Result ./tea_leaf
-wait               
-yhrun -N 22 -n 512 -m arbitrary -w ./TM_Mapping_Result ./tea_leaf
-wait               
-yhrun -N 22 -n 512 -m arbitrary -w ./TM_Mapping_Result ./tea_leaf
-wait               
-yhrun -N 22 -n 512 -m arbitrary -w ./TM_Mapping_Result ./tea_leaf
+yhrun -p test -N 4 -n 4 ./mpi_halo_exchange 2 2 4000000
 wait
-
-mv Config_640 Config
-mv TM_Mapping_Perm_640 TM_Mapping_Perm
-
-yhrun -N 27 -n 640 ./pingpong
+yhrun -p test -N 4 -n 4 ./glex_halo_exchange 2 2 4000000
 wait
-yhrun -N 27 -n 640 ./tea_leaf
-wait               
-yhrun -N 27 -n 640 ./tea_leaf
-wait               
-yhrun -N 27 -n 640 ./tea_leaf
-wait               
-yhrun -N 27 -n 640 ./tea_leaf
-wait               
-yhrun -N 27 -n 640 ./tea_leaf
+yhrun -p test -N 4 -n 4 ./mpi_halo_exchange 2 2 8000000
 wait
-yhrun -N 1 -n 1  ./RCR
-wait
-yhrun -N 27 -n 640 -m arbitrary -w ./RCR_Mapping_Result ./tea_leaf
-wait               
-yhrun -N 27 -n 640 -m arbitrary -w ./RCR_Mapping_Result ./tea_leaf
-wait               
-yhrun -N 27 -n 640 -m arbitrary -w ./RCR_Mapping_Result ./tea_leaf
-wait               
-yhrun -N 27 -n 640 -m arbitrary -w ./RCR_Mapping_Result ./tea_leaf
-wait               
-yhrun -N 27 -n 640 -m arbitrary -w ./RCR_Mapping_Result ./tea_leaf
-wait
-yhrun -N 1 -n 1 ./TM_Mapping
-wait
-yhrun -N 27 -n 640 -m arbitrary -w ./TM_Mapping_Result ./tea_leaf
-wait               
-yhrun -N 27 -n 640 -m arbitrary -w ./TM_Mapping_Result ./tea_leaf
-wait               
-yhrun -N 27 -n 640 -m arbitrary -w ./TM_Mapping_Result ./tea_leaf
-wait               
-yhrun -N 27 -n 640 -m arbitrary -w ./TM_Mapping_Result ./tea_leaf
-wait               
-yhrun -N 27 -n 640 -m arbitrary -w ./TM_Mapping_Result ./tea_leaf
+yhrun -p test -N 4 -n 4 ./glex_halo_exchange 2 2 8000000

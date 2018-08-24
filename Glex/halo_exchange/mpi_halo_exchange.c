@@ -95,7 +95,8 @@ int main(int argc,char** argv)
     if(taskid == 0){
         recvtime = MPI_Wtime();
         double totaltime = (recvtime - inittime) * 1e6 / (2.0 * 1000);
-        printf("process %d —— 二维影像区交换已经完成，用时 %.5lf us\n", taskid, totaltime);
+        printf("MPI_HALO_EXCHANGE: Trans %d Bytes,",buffsize*8);
+        printf("totaltime %.5lf us\n", totaltime);
     }
 
     /* 释放资源 */
@@ -107,5 +108,4 @@ int main(int argc,char** argv)
 
     /* MPI程序结束 */
     MPI_Finalize();
-
 }
