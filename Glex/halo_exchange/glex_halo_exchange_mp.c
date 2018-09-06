@@ -115,14 +115,6 @@ int main(int argc, char *argv[])
 	double **recvbuff = (double **)malloc(4*sizeof(double*));
 	for(memTmp=0;memTmp<4;++memTmp)
 		recvbuff[memTmp] = (double*)malloc(buffsize*sizeof(double));
-
-	glex_mem_handle_t mh[4];
-	// 存储远程端点内存标识
-	glex_mem_handle_t remote_mem_addr[4];
-	for(memTmp=0;memTmp<4;++memTmp){
-		ret = glex_register_mem(ep, sendbuff[memTmp], sizeof(double)*buffsize, GLEX_MEM_READ|GLEX_MEM_WRITE, &mh[memTmp]);
-		ret = glex_register_mem(ep, recvbuff[memTmp], sizeof(double)*buffsize, GLEX_MEM_READ|GLEX_MEM_WRITE, &remote_mem_addr[memTmp]);
-	}
 	
 	/****
 			交换两节点的端点地址信息（glex_ep_addr_t）
@@ -165,108 +157,6 @@ int main(int argc, char *argv[])
 			fprintf(stderr, "进程%d发送和接收端点交换信息失败", procTemp);
 		// printf("本地%d————本地端点NIC ID：%d, 端点序号: %d \n远程%d————远程端点NIC ID：%d, 远程端点序号：%d\n", my_id, nicID, EPNum, procTemp,remote_ep_addr[procTemp].s.nic_id, remote_ep_addr[procTemp].s.ep_num);
 	}
-	//printf("本地%d————本地端点NIC ID：%d, 端点序号: %d\n", my_id, nicID, EPNum);
-
-	/****
-			交换两节点的内存标识信息（glex_mem_handle_t）
-	*****/
-	/* 定义本地端点地址和远程端点地址的char数组(交换内存标识信息)，便于MPI发送 */
-	// 0-left/1-right/2-up/3-down
-	char local[4][sizeof "0000:0000:00000000:0000000000000000"];
-	char remote[4][sizeof "0000:0000:00000000:0000000000000000"];
-	for(procTemp=0; procTemp<4; procTemp++)
-		sprintf(local[procTemp], "%04x:%04x:%08x:%016Lx", 
-					mh[procTemp].s.mmt_index, mh[procTemp].s.att_base_off, mh[procTemp].s.att_index, mh[procTemp].v);
-	/* 利用MPI，交换发送、接收端点的地址(glex_mem_handle_t) */ 
-	for(procTemp=0; procTemp<num_procs; procTemp++){
-		if(procTemp == my_id)
-			continue;
-    	// 向左进程发送与接收
-	    if(my_id != 0 && (my_id-1)/col == my_id/col){
-	    	//printf("rank %d 的左进程为 %d\n", my_id, my_id-1);
-	    	ierr = MPI_Isend(local[0],sizeof(local[0]),MPI_CHAR,my_id-1,0,MPI_COMM_WORLD,&send_request[procTemp][0]);
-	    	ierr = MPI_Irecv(remote[0],sizeof(remote[0]),MPI_CHAR,my_id-1,MPI_ANY_TAG,MPI_COMM_WORLD,&recv_request[procTemp][0]);
-	    }else{
-	    	//printf("rank %d 的左进程为 %d\n", my_id, my_id+col-1);
-	    	ierr = MPI_Isend(local[0],sizeof(local[0]),MPI_CHAR,my_id+col-1,0,MPI_COMM_WORLD,&send_request[procTemp][0]);
-	    	ierr = MPI_Irecv(remote[0],sizeof(remote[0]),MPI_CHAR,my_id+col-1,MPI_ANY_TAG,MPI_COMM_WORLD,&recv_request[procTemp][0]);
-	    }
-	    // 向右进程发送与接收
-	    if((my_id+1)/col == my_id/col){
-	    	//printf("rank %d 的右进程为 %d\n", my_id, my_id+1);
-	    	ierr = MPI_Isend(local[1],sizeof(local[1]),MPI_CHAR,my_id+1,0,MPI_COMM_WORLD,&send_request[procTemp][1]);
-	    	ierr = MPI_Irecv(remote[1],sizeof(remote[1]),MPI_CHAR,my_id+1,MPI_ANY_TAG,MPI_COMM_WORLD,&recv_request[procTemp][1]);
-	    }else{
-	    	//printf("rank %d 的右进程为 %d\n", my_id, my_id-col+1);
-	    	ierr = MPI_Isend(local[1],sizeof(local[1]),MPI_CHAR,my_id-col+1,0,MPI_COMM_WORLD,&send_request[procTemp][1]);
-	    	ierr = MPI_Irecv(remote[1],sizeof(remote[1]),MPI_CHAR,my_id-col+1,MPI_ANY_TAG,MPI_COMM_WORLD,&recv_request[procTemp][1]);
-	    }
-	    // 向上进程发送与接收
-	    if((my_id-col)>=0){
-	    	//printf("rank %d 的上进程为 %d\n", my_id, my_id-col);
-	    	ierr = MPI_Isend(local[2],sizeof(local[2]),MPI_CHAR,my_id-col,0,MPI_COMM_WORLD,&send_request[procTemp][2]);
-	    	ierr = MPI_Irecv(remote[2],sizeof(remote[2]),MPI_CHAR,my_id-col,MPI_ANY_TAG,MPI_COMM_WORLD,&recv_request[procTemp][2]);
-	    }else{
-	    	//printf("rank %d 的上进程为 %d\n", my_id, my_id+(row-1)*col);
-	    	ierr = MPI_Isend(local[2],sizeof(local[2]),MPI_CHAR,my_id+(row-1)*col,0,MPI_COMM_WORLD,&send_request[procTemp][2]);
-	    	ierr = MPI_Irecv(remote[2],sizeof(remote[2]),MPI_CHAR,my_id+(row-1)*col,MPI_ANY_TAG,MPI_COMM_WORLD,&recv_request[procTemp][2]);
-	    }
-	    // 向下进程发送与接收
-	    if((my_id+col)<num_procs){
-	    	//printf("rank %d 的下进程为 %d\n", my_id, my_id+col);
-	    	ierr = MPI_Isend(local[3],sizeof(local[3]),MPI_CHAR,my_id+col,0,MPI_COMM_WORLD,&send_request[procTemp][3]);
-	    	ierr = MPI_Irecv(remote[3],sizeof(remote[3]),MPI_CHAR,my_id+col,MPI_ANY_TAG,MPI_COMM_WORLD,&recv_request[procTemp][3]);
-	    }else{
-	    	//printf("rank %d 的下进程为 %d\n", my_id, my_id-(row-1)*col);
-	    	ierr = MPI_Isend(local[3],sizeof(local[3]),MPI_CHAR,my_id-(row-1)*col,0,MPI_COMM_WORLD,&send_request[procTemp][3]);
-	    	ierr = MPI_Irecv(remote[3],sizeof(remote[3]),MPI_CHAR,my_id-(row-1)*col,MPI_ANY_TAG,MPI_COMM_WORLD,&recv_request[procTemp][3]);
-	    }
-	} 
-	// 等待执行完成
-	int fx = 0;
-	for(procTemp=0; procTemp<num_procs; procTemp++){
-		if(procTemp == my_id)
-			continue;
-		for(fx=0; fx<4; fx++){
-			MPI_Wait(&send_request[procTemp][fx],&status);
-			MPI_Wait(&recv_request[procTemp][fx],&status);
-		}
-	}
-
-	/* 将接收的数据存储于remote_mem_addr中 */
-	for(procTemp=0; procTemp<num_procs; procTemp++){
-		if(procTemp == my_id)
-			continue;
-		for(fx=0; fx<4; fx++){
-			parsed = sscanf(remote[fx], "%x:%x:%x:%Lx", 
-						&(remote_mem_addr[fx].s.mmt_index), &(remote_mem_addr[fx].s.att_base_off), &(remote_mem_addr[fx].s.att_index), &(remote_mem_addr[fx].v));
-			// 验证接收过程和存储过程是否正常
-			if(parsed != 4){
-				fprintf(stderr, "发送和接收端点交换信息失败");
-				return -1;
-			}
-			// printf("本地端点mmt_index：%d, 远程端点mmt_index：%d\n", mh[fx].s.mmt_index, remote_mem_addr[fx].s.mmt_index);
-		}
-	}
-
-	// 触发的远程事件，便于被写节点知道RDMA写已完成
-	struct glex_event remote_event0 = {
-		.cookie_0 = 10,
-		.cookie_1 = 11
-	};
-	struct glex_event remote_event1 = {
-		.cookie_0 = 11,
-		.cookie_1 = 12
-	};
-	struct glex_event remote_event2 = {
-		.cookie_0 = 12,
-		.cookie_1 = 13
-	};
-	struct glex_event remote_event3 = {
-		.cookie_0 = 13,
-		.cookie_1 = 14
-	};
-
 
 	// 判断当前结点的上下左右四个结点分别的进程号
 	int up,down,left,right;
@@ -317,28 +207,37 @@ int main(int argc, char *argv[])
 			.next = &mpReq1
 	};
 
-	//printf("process %d——left:%d,right:%d,up:%d,down:%d\n",my_id,remote_ep_addr[left].s.nic_id,remote_ep_addr[right].s.nic_id,remote_ep_addr[up].s.nic_id,remote_ep_addr[down].s.nic_id);
+	/* 开始glex-RDMA版二维影响区交换，循环千次取均值 */
+	int loop = 0;
+	totaltime = 0;
+	int fx = 0;
 
-	/* 开始glex-RDMA版二维影响区交换，循环十次取均值 */
-    int loop = 0;
-    totaltime = 0;
 	MPI_Barrier(MPI_COMM_WORLD); 
-	
 	inittime = MPI_Wtime();
-	for(loop=0;loop<1000;loop++){
-		// 发送RDMA PUT通信请求
-		ret = glex_send_imm_mp(ep, &mpReq0, NULL);
-		TEST_RetSuccess(ret, "非阻塞MP发送失败！");
-	
-		for(fx=0; fx<4; fx++){
-			glex_ep_addr_t source_ep_addr;
-			uint32_t mpLen;
-			ret = glex_receive_mp(ep, -1, &recvbuff[fx], mem_addr, &mpLen);
-			TEST_RetSuccess(ret, "阻塞接收MP报文失败！");
-			//printf("process %d_%d —— cookie_0:%d, cookie_1:%d\n", my_id, fx, event[0].cookie_0, event[0].cookie_1);
-		}
-		MPI_Barrier(MPI_COMM_WORLD); 
+	struct glex_imm_mp_req *err = (struct glex_imm_mp_req *)malloc(5*sizeof(struct glex_imm_mp_req));
+
+	// 发送MP报文请求
+	ret = glex_send_imm_mp(ep, &mpReq0, &err);
+	printf("process%d——出现错误的MP报文长度%d\n",my_id, err[0].len);
+	TEST_RetSuccess(ret, "非阻塞发送MP报文失败！");
+
+	printf("1\n");
+
+	for(fx=0; fx<4; fx++){
+		glex_ep_addr_t source_ep_addr;
+		uint32_t mpLen;
+		void *mem_addr = (void *)malloc(sizeof(double)*buffsize);
+		ret = glex_probe_first_mp(ep, -1, &source_ep_addr, &mem_addr, &mpLen);
+		TEST_RetSuccess(ret, "被写端点未接收MP报文！");
+    	ret = glex_discard_probed_mp(ep);
+		TEST_RetSuccess(ret, "清除MP报文队列异常！");
+		free(mem_addr);
+
+		printf("2\n");
 	}
+	MPI_Barrier(MPI_COMM_WORLD); 
+
+	printf("3\n");
 	if(my_id == 0){
 		recvtime = MPI_Wtime();
 		double totaltime = (recvtime - inittime) * 1e6 / (2.0 * 1000);
@@ -352,12 +251,6 @@ int main(int argc, char *argv[])
 
 	MPI_Finalize();
 
-
-	/* 释放内存 */
-	for(fx=0; fx<4; fx++){
-		ret = glex_deregister_mem(ep, mh[fx]);
-		ret = glex_deregister_mem(ep, remote_mem_addr[fx]);
-	}
 	free(sendbuff);
 	free(recvbuff);
 	//free(event);

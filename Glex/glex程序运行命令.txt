@@ -1,8 +1,16 @@
+module purge
+module load MPI/Intel/MPICH/3.1-icc15-dyn
+
+
 # 天河2编译使用glex库的C程序
 mpicc -I /usr/local/glex/include/ -L /usr/local/glex/lib -lglex glex_rdma.c -o glex_rdma
+mpicc -I /usr/local/glex/include/ -L /usr/local/glex/lib -lglex glex_halo_exchange.c -o glex_halo_exchange
+
 
 # 天河2交互式运行命令
 yhrun -N 2 -n 2 ./glex_rdma
+yhrun -N 2 -n 2 ./glex_rdma
+
 
 # 天河2指定结点运行命令
 yhrun -p test -w cn[13273,13591] -N 2 -n 2 ./mpi_overlapping 1000 1600
