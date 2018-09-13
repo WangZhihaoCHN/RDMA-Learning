@@ -132,7 +132,7 @@ int main(int argc, char *argv[])
 			.next = NULL
 		};
 		ret = glex_send_imm_mp(ep, &mpReq, NULL);
-		TEST_RetSuccess(ret, "非阻塞发送MP报文失败！");
+		TEST_RetSuccess(ret, "非阻塞发送MP报文失败!");
 	}else{
 		glex_ep_addr_t source_ep_addr;
 		uint32_t mpLen;

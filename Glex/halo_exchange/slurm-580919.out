@@ -1,0 +1,220 @@
+Loop 1 ——
+MPI_HALO_EXCHANGE: Trans 1 Bytes,totaltime 14.13548 us
+GLEX_HALO_EXCHANGE(MP): Trans 1 Bytes,totaltime 0.03600 us
+GLEX_HALO_EXCHANGE(RDMA_GET): Trans 8 Bytes,totaltime 13.49950 us
+GLEX_HALO_EXCHANGE(RDMA_PUT): Trans 8 Bytes,totaltime 13.00693 us
+Loop 2 ——
+MPI_HALO_EXCHANGE: Trans 1 Bytes,totaltime 14.18495 us
+GLEX_HALO_EXCHANGE(MP): Trans 1 Bytes,totaltime 0.03600 us
+GLEX_HALO_EXCHANGE(RDMA_GET): Trans 8 Bytes,totaltime 13.38947 us
+GLEX_HALO_EXCHANGE(RDMA_PUT): Trans 8 Bytes,totaltime 12.98547 us
+Loop 3 ——
+MPI_HALO_EXCHANGE: Trans 1 Bytes,totaltime 14.32407 us
+GLEX_HALO_EXCHANGE(MP): Trans 1 Bytes,totaltime 0.03207 us
+GLEX_HALO_EXCHANGE(RDMA_GET): Trans 8 Bytes,totaltime 13.35657 us
+GLEX_HALO_EXCHANGE(RDMA_PUT): Trans 8 Bytes,totaltime 12.96699 us
+Loop 4 ——
+MPI_HALO_EXCHANGE: Trans 1 Bytes,totaltime 14.10341 us
+GLEX_HALO_EXCHANGE(MP): Trans 1 Bytes,totaltime 0.03207 us
+GLEX_HALO_EXCHANGE(RDMA_GET): Trans 8 Bytes,totaltime 13.47446 us
+GLEX_HALO_EXCHANGE(RDMA_PUT): Trans 8 Bytes,totaltime 13.61191 us
+Loop 5 ——
+MPI_HALO_EXCHANGE: Trans 1 Bytes,totaltime 13.87393 us
+GLEX_HALO_EXCHANGE(MP): Trans 1 Bytes,totaltime 0.03195 us
+GLEX_HALO_EXCHANGE(RDMA_GET): Trans 8 Bytes,totaltime 13.47554 us
+GLEX_HALO_EXCHANGE(RDMA_PUT): Trans 8 Bytes,totaltime 13.09311 us
+Loop 6 ——
+MPI_HALO_EXCHANGE: Trans 1 Bytes,totaltime 14.13298 us
+GLEX_HALO_EXCHANGE(MP): Trans 1 Bytes,totaltime 0.03195 us
+GLEX_HALO_EXCHANGE(RDMA_GET): Trans 8 Bytes,totaltime 13.42797 us
+GLEX_HALO_EXCHANGE(RDMA_PUT): Trans 8 Bytes,totaltime 13.11457 us
+Loop 7 ——
+MPI_HALO_EXCHANGE: Trans 1 Bytes,totaltime 13.79347 us
+GLEX_HALO_EXCHANGE(MP): Trans 1 Bytes,totaltime 0.03541 us
+GLEX_HALO_EXCHANGE(RDMA_GET): Trans 8 Bytes,totaltime 13.52894 us
+GLEX_HALO_EXCHANGE(RDMA_PUT): Trans 8 Bytes,totaltime 13.16047 us
+Loop 8 ——
+MPI_HALO_EXCHANGE: Trans 1 Bytes,totaltime 13.79704 us
+GLEX_HALO_EXCHANGE(MP): Trans 1 Bytes,totaltime 0.03350 us
+GLEX_HALO_EXCHANGE(RDMA_GET): Trans 8 Bytes,totaltime 13.56542 us
+GLEX_HALO_EXCHANGE(RDMA_PUT): Trans 8 Bytes,totaltime 13.00251 us
+Loop 9 ——
+MPI_HALO_EXCHANGE: Trans 1 Bytes,totaltime 13.76605 us
+GLEX_HALO_EXCHANGE(MP): Trans 1 Bytes,totaltime 0.03242 us
+GLEX_HALO_EXCHANGE(RDMA_GET): Trans 8 Bytes,totaltime 13.69047 us
+GLEX_HALO_EXCHANGE(RDMA_PUT): Trans 8 Bytes,totaltime 13.10956 us
+Loop 10 ——
+MPI_HALO_EXCHANGE: Trans 1 Bytes,totaltime 13.92603 us
+GLEX_HALO_EXCHANGE(MP): Trans 1 Bytes,totaltime 0.03207 us
+GLEX_HALO_EXCHANGE(RDMA_GET): Trans 8 Bytes,totaltime 13.40806 us
+GLEX_HALO_EXCHANGE(RDMA_PUT): Trans 8 Bytes,totaltime 13.07201 us
+Loop 1 ——
+MPI_HALO_EXCHANGE: Trans 16 Bytes,totaltime 13.81004 us
+GLEX_HALO_EXCHANGE(MP): Trans 16 Bytes,totaltime 0.03254 us
+GLEX_HALO_EXCHANGE(RDMA_GET): Trans 128 Bytes,totaltime 13.37147 us
+GLEX_HALO_EXCHANGE(RDMA_PUT): Trans 128 Bytes,totaltime 12.96699 us
+Loop 2 ——
+MPI_HALO_EXCHANGE: Trans 16 Bytes,totaltime 14.09900 us
+GLEX_HALO_EXCHANGE(MP): Trans 16 Bytes,totaltime 0.03147 us
+GLEX_HALO_EXCHANGE(RDMA_GET): Trans 128 Bytes,totaltime 16.69395 us
+GLEX_HALO_EXCHANGE(RDMA_PUT): Trans 128 Bytes,totaltime 13.02898 us
+Loop 3 ——
+MPI_HALO_EXCHANGE: Trans 16 Bytes,totaltime 13.70406 us
+GLEX_HALO_EXCHANGE(MP): Trans 16 Bytes,totaltime 0.03052 us
+GLEX_HALO_EXCHANGE(RDMA_GET): Trans 128 Bytes,totaltime 13.38100 us
+GLEX_HALO_EXCHANGE(RDMA_PUT): Trans 128 Bytes,totaltime 12.98654 us
+Loop 4 ——
+MPI_HALO_EXCHANGE: Trans 16 Bytes,totaltime 13.82101 us
+GLEX_HALO_EXCHANGE(MP): Trans 16 Bytes,totaltime 0.03302 us
+GLEX_HALO_EXCHANGE(RDMA_GET): Trans 128 Bytes,totaltime 13.54039 us
+GLEX_HALO_EXCHANGE(RDMA_PUT): Trans 128 Bytes,totaltime 13.00454 us
+Loop 5 ——
+MPI_HALO_EXCHANGE: Trans 16 Bytes,totaltime 14.06741 us
+GLEX_HALO_EXCHANGE(MP): Trans 16 Bytes,totaltime 0.03397 us
+GLEX_HALO_EXCHANGE(RDMA_GET): Trans 128 Bytes,totaltime 13.40497 us
+GLEX_HALO_EXCHANGE(RDMA_PUT): Trans 128 Bytes,totaltime 13.10194 us
+Loop 6 ——
+MPI_HALO_EXCHANGE: Trans 16 Bytes,totaltime 13.73553 us
+GLEX_HALO_EXCHANGE(MP): Trans 16 Bytes,totaltime 0.03254 us
+GLEX_HALO_EXCHANGE(RDMA_GET): Trans 128 Bytes,totaltime 13.37445 us
+GLEX_HALO_EXCHANGE(RDMA_PUT): Trans 128 Bytes,totaltime 13.12959 us
+Loop 7 ——
+MPI_HALO_EXCHANGE: Trans 16 Bytes,totaltime 14.05001 us
+GLEX_HALO_EXCHANGE(MP): Trans 16 Bytes,totaltime 0.03254 us
+GLEX_HALO_EXCHANGE(RDMA_GET): Trans 128 Bytes,totaltime 13.30602 us
+GLEX_HALO_EXCHANGE(RDMA_PUT): Trans 128 Bytes,totaltime 13.10301 us
+Loop 8 ——
+MPI_HALO_EXCHANGE: Trans 16 Bytes,totaltime 13.80944 us
+GLEX_HALO_EXCHANGE(MP): Trans 16 Bytes,totaltime 0.03242 us
+GLEX_HALO_EXCHANGE(RDMA_GET): Trans 128 Bytes,totaltime 13.44860 us
+GLEX_HALO_EXCHANGE(RDMA_PUT): Trans 128 Bytes,totaltime 13.06891 us
+Loop 9 ——
+MPI_HALO_EXCHANGE: Trans 16 Bytes,totaltime 14.12249 us
+GLEX_HALO_EXCHANGE(MP): Trans 16 Bytes,totaltime 0.03242 us
+GLEX_HALO_EXCHANGE(RDMA_GET): Trans 128 Bytes,totaltime 13.39197 us
+GLEX_HALO_EXCHANGE(RDMA_PUT): Trans 128 Bytes,totaltime 13.06057 us
+Loop 10 ——
+MPI_HALO_EXCHANGE: Trans 16 Bytes,totaltime 14.06443 us
+GLEX_HALO_EXCHANGE(MP): Trans 16 Bytes,totaltime 0.03803 us
+GLEX_HALO_EXCHANGE(RDMA_GET): Trans 128 Bytes,totaltime 13.96489 us
+GLEX_HALO_EXCHANGE(RDMA_PUT): Trans 128 Bytes,totaltime 12.97998 us
+Loop 1 ——
+MPI_HALO_EXCHANGE: Trans 64 Bytes,totaltime 14.24098 us
+GLEX_HALO_EXCHANGE(MP): Trans 64 Bytes,totaltime 0.02849 us
+yhrun: error: cn13468: task 3: Segmentation fault
+GLEX_HALO_EXCHANGE(RDMA_GET): Trans 512 Bytes,totaltime 13.37004 us
+GLEX_HALO_EXCHANGE(RDMA_PUT): Trans 512 Bytes,totaltime 13.02302 us
+Loop 2 ——
+MPI_HALO_EXCHANGE: Trans 64 Bytes,totaltime 14.15157 us
+GLEX_HALO_EXCHANGE(MP): Trans 64 Bytes,totaltime 0.03254 us
+yhrun: error: cn13469: task 4: Segmentation fault
+GLEX_HALO_EXCHANGE(RDMA_GET): Trans 512 Bytes,totaltime 13.29505 us
+GLEX_HALO_EXCHANGE(RDMA_PUT): Trans 512 Bytes,totaltime 13.18848 us
+Loop 3 ——
+MPI_HALO_EXCHANGE: Trans 64 Bytes,totaltime 14.50491 us
+GLEX_HALO_EXCHANGE(MP): Trans 64 Bytes,totaltime 0.03004 us
+yhrun: error: cn13467: task 2: Segmentation fault
+GLEX_HALO_EXCHANGE(RDMA_GET): Trans 512 Bytes,totaltime 13.74853 us
+GLEX_HALO_EXCHANGE(RDMA_PUT): Trans 512 Bytes,totaltime 13.23843 us
+Loop 4 ——
+MPI_HALO_EXCHANGE: Trans 64 Bytes,totaltime 14.26101 us
+GLEX_HALO_EXCHANGE(MP): Trans 64 Bytes,totaltime 0.03254 us
+yhrun: error: cn13470: task 5: Segmentation fault
+GLEX_HALO_EXCHANGE(RDMA_GET): Trans 512 Bytes,totaltime 13.47256 us
+GLEX_HALO_EXCHANGE(RDMA_PUT): Trans 512 Bytes,totaltime 13.01396 us
+Loop 5 ——
+MPI_HALO_EXCHANGE: Trans 64 Bytes,totaltime 14.33349 us
+GLEX_HALO_EXCHANGE(MP): Trans 64 Bytes,totaltime 0.03707 us
+yhrun: error: cn13467: task 2: Segmentation fault
+GLEX_HALO_EXCHANGE(RDMA_GET): Trans 512 Bytes,totaltime 14.94110 us
+GLEX_HALO_EXCHANGE(RDMA_PUT): Trans 512 Bytes,totaltime 13.40759 us
+Loop 6 ——
+MPI_HALO_EXCHANGE: Trans 64 Bytes,totaltime 15.10501 us
+GLEX_HALO_EXCHANGE(MP): Trans 64 Bytes,totaltime 0.03409 us
+yhrun: error: cn13468: task 3: Segmentation fault
+GLEX_HALO_EXCHANGE(RDMA_GET): Trans 512 Bytes,totaltime 13.42094 us
+GLEX_HALO_EXCHANGE(RDMA_PUT): Trans 512 Bytes,totaltime 13.17847 us
+Loop 7 ——
+MPI_HALO_EXCHANGE: Trans 64 Bytes,totaltime 14.48405 us
+GLEX_HALO_EXCHANGE(MP): Trans 64 Bytes,totaltime 0.03147 us
+yhrun: error: cn13470: task 5: Segmentation fault
+GLEX_HALO_EXCHANGE(RDMA_GET): Trans 512 Bytes,totaltime 13.37647 us
+GLEX_HALO_EXCHANGE(RDMA_PUT): Trans 512 Bytes,totaltime 13.11648 us
+Loop 8 ——
+MPI_HALO_EXCHANGE: Trans 64 Bytes,totaltime 14.24360 us
+GLEX_HALO_EXCHANGE(MP): Trans 64 Bytes,totaltime 0.03147 us
+yhrun: error: cn13468: task 3: Segmentation fault
+GLEX_HALO_EXCHANGE(RDMA_GET): Trans 512 Bytes,totaltime 13.43155 us
+GLEX_HALO_EXCHANGE(RDMA_PUT): Trans 512 Bytes,totaltime 13.06748 us
+Loop 9 ——
+MPI_HALO_EXCHANGE: Trans 64 Bytes,totaltime 14.02891 us
+GLEX_HALO_EXCHANGE(MP): Trans 64 Bytes,totaltime 0.02992 us
+yhrun: error: cn13467: task 2: Segmentation fault
+GLEX_HALO_EXCHANGE(RDMA_GET): Trans 512 Bytes,totaltime 13.41999 us
+GLEX_HALO_EXCHANGE(RDMA_PUT): Trans 512 Bytes,totaltime 13.11600 us
+Loop 10 ——
+MPI_HALO_EXCHANGE: Trans 64 Bytes,totaltime 15.78104 us
+GLEX_HALO_EXCHANGE(MP): Trans 64 Bytes,totaltime 0.03493 us
+yhrun: error: cn13468: task 3: Segmentation fault
+GLEX_HALO_EXCHANGE(RDMA_GET): Trans 512 Bytes,totaltime 13.40652 us
+GLEX_HALO_EXCHANGE(RDMA_PUT): Trans 512 Bytes,totaltime 13.04948 us
+Loop 1 ——
+MPI_HALO_EXCHANGE: Trans 100 Bytes,totaltime 14.23609 us
+GLEX_HALO_EXCHANGE(MP): Trans 100 Bytes,totaltime 0.03099 us
+yhrun: error: cn13470: task 5: Segmentation fault
+GLEX_HALO_EXCHANGE(RDMA_GET): Trans 800 Bytes,totaltime 13.35144 us
+GLEX_HALO_EXCHANGE(RDMA_PUT): Trans 800 Bytes,totaltime 13.14950 us
+Loop 2 ——
+MPI_HALO_EXCHANGE: Trans 100 Bytes,totaltime 14.43243 us
+GLEX_HALO_EXCHANGE(MP): Trans 100 Bytes,totaltime 0.03052 us
+yhrun: error: cn13467: task 2: Segmentation fault
+GLEX_HALO_EXCHANGE(RDMA_GET): Trans 800 Bytes,totaltime 13.37695 us
+GLEX_HALO_EXCHANGE(RDMA_PUT): Trans 800 Bytes,totaltime 12.99500 us
+Loop 3 ——
+MPI_HALO_EXCHANGE: Trans 100 Bytes,totaltime 14.16302 us
+GLEX_HALO_EXCHANGE(MP): Trans 100 Bytes,totaltime 0.03254 us
+yhrun: error: cn13469: task 4: Segmentation fault
+GLEX_HALO_EXCHANGE(RDMA_GET): Trans 800 Bytes,totaltime 13.51559 us
+GLEX_HALO_EXCHANGE(RDMA_PUT): Trans 800 Bytes,totaltime 13.13794 us
+Loop 4 ——
+MPI_HALO_EXCHANGE: Trans 100 Bytes,totaltime 14.16445 us
+GLEX_HALO_EXCHANGE(MP): Trans 100 Bytes,totaltime 0.03207 us
+yhrun: error: cn13468: task 3: Segmentation fault
+GLEX_HALO_EXCHANGE(RDMA_GET): Trans 800 Bytes,totaltime 13.44848 us
+GLEX_HALO_EXCHANGE(RDMA_PUT): Trans 800 Bytes,totaltime 13.09550 us
+Loop 5 ——
+MPI_HALO_EXCHANGE: Trans 100 Bytes,totaltime 14.52243 us
+GLEX_HALO_EXCHANGE(MP): Trans 100 Bytes,totaltime 0.03350 us
+yhrun: error: cn13468: task 3: Segmentation fault
+GLEX_HALO_EXCHANGE(RDMA_GET): Trans 800 Bytes,totaltime 13.35752 us
+GLEX_HALO_EXCHANGE(RDMA_PUT): Trans 800 Bytes,totaltime 13.08692 us
+Loop 6 ——
+MPI_HALO_EXCHANGE: Trans 100 Bytes,totaltime 14.37604 us
+GLEX_HALO_EXCHANGE(MP): Trans 100 Bytes,totaltime 0.03052 us
+yhrun: error: cn13467: task 2: Segmentation fault
+GLEX_HALO_EXCHANGE(RDMA_GET): Trans 800 Bytes,totaltime 13.44252 us
+GLEX_HALO_EXCHANGE(RDMA_PUT): Trans 800 Bytes,totaltime 13.09156 us
+Loop 7 ——
+MPI_HALO_EXCHANGE: Trans 100 Bytes,totaltime 14.22107 us
+GLEX_HALO_EXCHANGE(MP): Trans 100 Bytes,totaltime 0.03350 us
+yhrun: error: cn13469: task 4: Segmentation fault
+GLEX_HALO_EXCHANGE(RDMA_GET): Trans 800 Bytes,totaltime 13.38005 us
+GLEX_HALO_EXCHANGE(RDMA_PUT): Trans 800 Bytes,totaltime 13.09550 us
+Loop 8 ——
+MPI_HALO_EXCHANGE: Trans 100 Bytes,totaltime 14.15157 us
+GLEX_HALO_EXCHANGE(MP): Trans 100 Bytes,totaltime 0.03302 us
+yhrun: error: cn13469: task 4: Segmentation fault
+GLEX_HALO_EXCHANGE(RDMA_GET): Trans 800 Bytes,totaltime 13.24892 us
+GLEX_HALO_EXCHANGE(RDMA_PUT): Trans 800 Bytes,totaltime 13.20350 us
+Loop 9 ——
+MPI_HALO_EXCHANGE: Trans 100 Bytes,totaltime 14.21046 us
+GLEX_HALO_EXCHANGE(MP): Trans 100 Bytes,totaltime 0.03350 us
+yhrun: error: cn13468: task 3: Segmentation fault
+GLEX_HALO_EXCHANGE(RDMA_GET): Trans 800 Bytes,totaltime 13.72147 us
+GLEX_HALO_EXCHANGE(RDMA_PUT): Trans 800 Bytes,totaltime 13.15105 us
+Loop 10 ——
+MPI_HALO_EXCHANGE: Trans 100 Bytes,totaltime 14.38546 us
+GLEX_HALO_EXCHANGE(MP): Trans 100 Bytes,totaltime 0.03600 us
+yhrun: error: cn13469: task 4: Segmentation fault
+GLEX_HALO_EXCHANGE(RDMA_GET): Trans 800 Bytes,totaltime 13.46099 us
+GLEX_HALO_EXCHANGE(RDMA_PUT): Trans 800 Bytes,totaltime 13.06200 us

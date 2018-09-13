@@ -109,12 +109,12 @@ int main(int argc, char *argv[])
 
 	/* 注册内存，锁内存并建立映射关系 */
 	int memTmp = 0;
-	double **sendbuff = (double **)malloc(4*sizeof(double*));
+	char **sendbuff = (char **)malloc(4*sizeof(char*));
 	for(memTmp=0;memTmp<4;++memTmp)
-		sendbuff[memTmp] = (double*)malloc(buffsize*sizeof(double));
-	double **recvbuff = (double **)malloc(4*sizeof(double*));
+		sendbuff[memTmp] = (char*)malloc(buffsize*sizeof(char));
+	char **recvbuff = (char **)malloc(4*sizeof(char*));
 	for(memTmp=0;memTmp<4;++memTmp)
-		recvbuff[memTmp] = (double*)malloc(buffsize*sizeof(double));
+		recvbuff[memTmp] = (char*)malloc(buffsize*sizeof(char));
 	
 	/****
 			交换两节点的端点地址信息（glex_ep_addr_t）
@@ -185,25 +185,25 @@ int main(int argc, char *argv[])
 	struct glex_imm_mp_req mpReq3 = {
 			.rmt_ep_addr = remote_ep_addr[down],
 			.data = sendbuff[3],
-			.len = sizeof(double)*buffsize,
+			.len = sizeof(char)*buffsize,
 			.next = NULL
 	};
 	struct glex_imm_mp_req mpReq2 = {
 			.rmt_ep_addr = remote_ep_addr[up],
 			.data = sendbuff[2],
-			.len = sizeof(double)*buffsize,
+			.len = sizeof(char)*buffsize,
 			.next = &mpReq3
 	};
 	struct glex_imm_mp_req mpReq1 = {
 			.rmt_ep_addr = remote_ep_addr[right],
 			.data = sendbuff[1],
-			.len = sizeof(double)*buffsize,
+			.len = sizeof(char)*buffsize,
 			.next = &mpReq2
 	};
 	struct glex_imm_mp_req mpReq0 = {
 			.rmt_ep_addr = remote_ep_addr[left],
 			.data = sendbuff[0],
-			.len = sizeof(double)*buffsize,
+			.len = sizeof(char)*buffsize,
 			.next = &mpReq1
 	};
 
@@ -214,46 +214,37 @@ int main(int argc, char *argv[])
 
 	MPI_Barrier(MPI_COMM_WORLD); 
 	inittime = MPI_Wtime();
-	struct glex_imm_mp_req *err = (struct glex_imm_mp_req *)malloc(5*sizeof(struct glex_imm_mp_req));
 
 	// 发送MP报文请求
-	ret = glex_send_imm_mp(ep, &mpReq0, &err);
-	printf("process%d——出现错误的MP报文长度%d\n",my_id, err[0].len);
+	ret = glex_send_imm_mp(ep, &mpReq0, NULL);
 	TEST_RetSuccess(ret, "非阻塞发送MP报文失败！");
-
-	printf("1\n");
 
 	for(fx=0; fx<4; fx++){
 		glex_ep_addr_t source_ep_addr;
 		uint32_t mpLen;
-		void *mem_addr = (void *)malloc(sizeof(double)*buffsize);
-		ret = glex_probe_first_mp(ep, -1, &source_ep_addr, &mem_addr, &mpLen);
-		TEST_RetSuccess(ret, "被写端点未接收MP报文！");
-    	ret = glex_discard_probed_mp(ep);
-		TEST_RetSuccess(ret, "清除MP报文队列异常！");
-		free(mem_addr);
-
-		printf("2\n");
+		// ret = glex_probe_first_mp(ep, -1, &source_ep_addr, (void **)&recvbuff[fx], &mpLen);
+		// TEST_RetSuccess(ret, "被写端点未接收MP报文!");
+		// ret = glex_discard_probed_mp(ep);
+		// TEST_RetSuccess(ret, "清除MP报文队列异常!");
+		ret = glex_receive_mp(ep, -1, &source_ep_addr, (void **)&recvbuff[fx], &mpLen);
+		TEST_RetSuccess(ret, "阻塞接收MP报文失败！");
 	}
 	MPI_Barrier(MPI_COMM_WORLD); 
 
-	printf("3\n");
 	if(my_id == 0){
 		recvtime = MPI_Wtime();
 		double totaltime = (recvtime - inittime) * 1e6 / (2.0 * 1000);
-		printf("GLEX_HALO_EXCHANGE(MP): Trans %d Bytes,",buffsize*8);
+		printf("GLEX_HALO_EXCHANGE(MP): Trans %d Bytes,",buffsize);
 		printf("totaltime %.5lf us\n", totaltime);
 	}
 	
 	/* 其他工作… */
 
 
-
 	MPI_Finalize();
 
 	free(sendbuff);
 	free(recvbuff);
-	//free(event);
 
 	/* 释放端点资源 */
 	ret = glex_destroy_ep(ep);

@@ -11,7 +11,7 @@ int main(int argc,char** argv)
     MPI_Request  send_request[4],recv_request[4];
     int          ierr,i,j;
     int          buffsize;
-    double       *sendbuff,*recvbuff1,*recvbuff2,*recvbuff3,*recvbuff4;
+    char         *sendbuff,*recvbuff1,*recvbuff2,*recvbuff3,*recvbuff4;
     double       inittime,recvtime,totaltime;
    
     /* MPI初始化 */
@@ -27,16 +27,16 @@ int main(int argc,char** argv)
     buffsize=atoi(argv[3]);
 
     /* 申请内存 */ 
-    sendbuff=(double *)malloc(sizeof(double)*buffsize);
-    recvbuff1=(double *)malloc(sizeof(double)*buffsize);
-    recvbuff2=(double *)malloc(sizeof(double)*buffsize);
-    recvbuff3=(double *)malloc(sizeof(double)*buffsize);
-    recvbuff4=(double *)malloc(sizeof(double)*buffsize);
+    sendbuff=(char *)malloc(sizeof(char)*buffsize);
+    recvbuff1=(char *)malloc(sizeof(char)*buffsize);
+    recvbuff2=(char *)malloc(sizeof(char)*buffsize);
+    recvbuff3=(char *)malloc(sizeof(char)*buffsize);
+    recvbuff4=(char *)malloc(sizeof(char)*buffsize);
     
     /* 向量初始化 */
-    srand((unsigned)time( NULL ) + taskid);
+    srand((unsigned)time(NULL)+taskid);
     for(i=0;i<buffsize;i++){
-        sendbuff[i]=(double)rand()/RAND_MAX;
+        sendbuff[i] = rand()%256;
     }
 
     /* 进行通信,发送时需要注意上下左右边界问题 */
@@ -48,42 +48,42 @@ int main(int argc,char** argv)
         // 向左进程发送与接收
         if(taskid != 0 && (taskid-1)/col == taskid/col){
         	//printf("rank %d 的左进程为 %d\n", taskid, taskid-1);
-        	ierr = MPI_Isend(sendbuff,buffsize,MPI_DOUBLE,taskid-1,0,MPI_COMM_WORLD,&send_request[0]);
-        	ierr = MPI_Irecv(recvbuff1,buffsize,MPI_DOUBLE,taskid-1,MPI_ANY_TAG,MPI_COMM_WORLD,&recv_request[0]);
+        	ierr = MPI_Isend(sendbuff,buffsize,MPI_CHAR,taskid-1,0,MPI_COMM_WORLD,&send_request[0]);
+        	ierr = MPI_Irecv(recvbuff1,buffsize,MPI_CHAR,taskid-1,MPI_ANY_TAG,MPI_COMM_WORLD,&recv_request[0]);
         }else{
         	//printf("rank %d 的左进程为 %d\n", taskid, taskid+col-1);
-        	ierr = MPI_Isend(sendbuff,buffsize,MPI_DOUBLE,taskid+col-1,0,MPI_COMM_WORLD,&send_request[0]);
-        	ierr = MPI_Irecv(recvbuff1,buffsize,MPI_DOUBLE,taskid+col-1,MPI_ANY_TAG,MPI_COMM_WORLD,&recv_request[0]);
+        	ierr = MPI_Isend(sendbuff,buffsize,MPI_CHAR,taskid+col-1,0,MPI_COMM_WORLD,&send_request[0]);
+        	ierr = MPI_Irecv(recvbuff1,buffsize,MPI_CHAR,taskid+col-1,MPI_ANY_TAG,MPI_COMM_WORLD,&recv_request[0]);
         }
         // 向右进程发送与接收
         if((taskid+1)/col == taskid/col){
         	//printf("rank %d 的右进程为 %d\n", taskid, taskid+1);
-        	ierr = MPI_Isend(sendbuff,buffsize,MPI_DOUBLE,taskid+1,0,MPI_COMM_WORLD,&send_request[1]);
-        	ierr = MPI_Irecv(recvbuff2,buffsize,MPI_DOUBLE,taskid+1,MPI_ANY_TAG,MPI_COMM_WORLD,&recv_request[1]);
+        	ierr = MPI_Isend(sendbuff,buffsize,MPI_CHAR,taskid+1,0,MPI_COMM_WORLD,&send_request[1]);
+        	ierr = MPI_Irecv(recvbuff2,buffsize,MPI_CHAR,taskid+1,MPI_ANY_TAG,MPI_COMM_WORLD,&recv_request[1]);
         }else{
         	//printf("rank %d 的右进程为 %d\n", taskid, taskid-col+1);
-        	ierr = MPI_Isend(sendbuff,buffsize,MPI_DOUBLE,taskid-col+1,0,MPI_COMM_WORLD,&send_request[1]);
-        	ierr = MPI_Irecv(recvbuff2,buffsize,MPI_DOUBLE,taskid-col+1,MPI_ANY_TAG,MPI_COMM_WORLD,&recv_request[1]);
+        	ierr = MPI_Isend(sendbuff,buffsize,MPI_CHAR,taskid-col+1,0,MPI_COMM_WORLD,&send_request[1]);
+        	ierr = MPI_Irecv(recvbuff2,buffsize,MPI_CHAR,taskid-col+1,MPI_ANY_TAG,MPI_COMM_WORLD,&recv_request[1]);
         }
         // 向上进程发送与接收
         if((taskid-col)>=0){
         	//printf("rank %d 的上进程为 %d\n", taskid, taskid-col);
-        	ierr = MPI_Isend(sendbuff,buffsize,MPI_DOUBLE,taskid-col,0,MPI_COMM_WORLD,&send_request[2]);
-        	ierr = MPI_Irecv(recvbuff3,buffsize,MPI_DOUBLE,taskid-col,MPI_ANY_TAG,MPI_COMM_WORLD,&recv_request[2]);
+        	ierr = MPI_Isend(sendbuff,buffsize,MPI_CHAR,taskid-col,0,MPI_COMM_WORLD,&send_request[2]);
+        	ierr = MPI_Irecv(recvbuff3,buffsize,MPI_CHAR,taskid-col,MPI_ANY_TAG,MPI_COMM_WORLD,&recv_request[2]);
         }else{
         	//printf("rank %d 的上进程为 %d\n", taskid, taskid+(row-1)*col);
-        	ierr = MPI_Isend(sendbuff,buffsize,MPI_DOUBLE,taskid+(row-1)*col,0,MPI_COMM_WORLD,&send_request[2]);
-        	ierr = MPI_Irecv(recvbuff3,buffsize,MPI_DOUBLE,taskid+(row-1)*col,MPI_ANY_TAG,MPI_COMM_WORLD,&recv_request[2]);
+        	ierr = MPI_Isend(sendbuff,buffsize,MPI_CHAR,taskid+(row-1)*col,0,MPI_COMM_WORLD,&send_request[2]);
+        	ierr = MPI_Irecv(recvbuff3,buffsize,MPI_CHAR,taskid+(row-1)*col,MPI_ANY_TAG,MPI_COMM_WORLD,&recv_request[2]);
         }
         // 向下进程发送与接收
         if((taskid+col)<ntasks){
         	//printf("rank %d 的下进程为 %d\n", taskid, taskid+col);
-        	ierr = MPI_Isend(sendbuff,buffsize,MPI_DOUBLE,taskid+col,0,MPI_COMM_WORLD,&send_request[3]);
-        	ierr = MPI_Irecv(recvbuff4,buffsize,MPI_DOUBLE,taskid+col,MPI_ANY_TAG,MPI_COMM_WORLD,&recv_request[3]);
+        	ierr = MPI_Isend(sendbuff,buffsize,MPI_CHAR,taskid+col,0,MPI_COMM_WORLD,&send_request[3]);
+        	ierr = MPI_Irecv(recvbuff4,buffsize,MPI_CHAR,taskid+col,MPI_ANY_TAG,MPI_COMM_WORLD,&recv_request[3]);
         }else{
         	//printf("rank %d 的下进程为 %d\n", taskid, taskid-(row-1)*col);
-        	ierr = MPI_Isend(sendbuff,buffsize,MPI_DOUBLE,taskid-(row-1)*col,0,MPI_COMM_WORLD,&send_request[3]);
-        	ierr = MPI_Irecv(recvbuff4,buffsize,MPI_DOUBLE,taskid-(row-1)*col,MPI_ANY_TAG,MPI_COMM_WORLD,&recv_request[3]);
+        	ierr = MPI_Isend(sendbuff,buffsize,MPI_CHAR,taskid-(row-1)*col,0,MPI_COMM_WORLD,&send_request[3]);
+        	ierr = MPI_Irecv(recvbuff4,buffsize,MPI_CHAR,taskid-(row-1)*col,MPI_ANY_TAG,MPI_COMM_WORLD,&recv_request[3]);
         }
 
         /* 等待通信结束，计时 */
@@ -95,7 +95,7 @@ int main(int argc,char** argv)
     if(taskid == 0){
         recvtime = MPI_Wtime();
         double totaltime = (recvtime - inittime) * 1e6 / (2.0 * 1000);
-        printf("MPI_HALO_EXCHANGE: Trans %d Bytes,",buffsize*8);
+        printf("MPI_HALO_EXCHANGE: Trans %d Bytes,",buffsize);
         printf("totaltime %.5lf us\n", totaltime);
     }
 

@@ -14,3 +14,7 @@ yhrun -N 2 -n 2 ./glex_rdma
 
 # 天河2指定结点运行命令
 yhrun -p test -w cn[13273,13591] -N 2 -n 2 ./mpi_overlapping 1000 1600
+
+# 天河2脚本提交命令
+yhbatch -N 9 -n 9 ./HaloScript.sh
+yhq
